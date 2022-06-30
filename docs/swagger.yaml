@@ -1,0 +1,112 @@
+definitions:
+  main.message:
+    properties:
+      message:
+        type: string
+    type: object
+  main.vod:
+    properties:
+      bitrate:
+        type: integer
+      date:
+        type: string
+      duration:
+        type: integer
+      filename:
+        type: string
+      fps:
+        type: integer
+      publish:
+        type: boolean
+      resolution:
+        type: string
+      size:
+        type: integer
+      title:
+        type: string
+      uuid:
+        type: string
+    required:
+    - bitrate
+    - date
+    - duration
+    - filename
+    - fps
+    - publish
+    - resolution
+    - size
+    - title
+    - uuid
+    type: object
+info:
+  contact: {}
+paths:
+  /vods/:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.vod'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.message'
+      summary: Get all vods
+      tags:
+      - Vods
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vod dict
+        in: body
+        name: Body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.message'
+      summary: Create vod
+      tags:
+      - Vods
+  /vods/{uuid}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.vod'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.message'
+      summary: Get vod by uuid
+      tags:
+      - Vods
+swagger: "2.0"
