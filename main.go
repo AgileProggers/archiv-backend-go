@@ -26,7 +26,7 @@ type vod struct {
 }
 
 type clip struct {
-	ID         string    `gorm:"index:unique"json:"id" binding:"required"`
+	ID         string    `gorm:"index:unique" json:"id" binding:"required"`
 	Title      string    `json:"title" binding:"required"`
 	Duration   int       `json:"duration" binding:"required"`
 	Date       time.Time `json:"date" time_format:"2006-01-02T15:04:05.000Z" binding:"required"`
@@ -43,12 +43,12 @@ type clip struct {
 }
 
 type creator struct {
-	ID   int    `gorm:"index:unique"json:"id" binding:"required"`
+	ID   int    `gorm:"index:unique" json:"id" binding:"required"`
 	Name string `json:"name" binding:"required"`
 }
 
 type game struct {
-	ID     int    `gorm:"index:unique"json:"id" binding:"required"`
+	ID     int    `gorm:"index:unique" json:"id" binding:"required"`
 	Name   string `json:"name" binding:"required"`
 	Boxart string `json:"box_art" binding:"required"`
 }
