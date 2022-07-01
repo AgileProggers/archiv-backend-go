@@ -41,7 +41,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/main.message"
+                            "type": "string"
                         }
                     }
                 }
@@ -72,19 +72,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.message"
+                            "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/main.message"
+                            "type": "string"
                         }
                     }
                 }
             }
         },
-        "/vods/{uuid}": {
+        "/vods/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -95,12 +95,12 @@ const docTemplate = `{
                 "tags": [
                     "Vods"
                 ],
-                "summary": "Get vod by uuid",
+                "summary": "Get vod by id",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Unique Identifier",
-                        "name": "uuid",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -115,7 +115,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/main.message"
+                            "type": "string"
                         }
                     }
                 }
@@ -123,31 +123,22 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.message": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "main.vod": {
             "type": "object",
             "required": [
-                "bitrate",
                 "date",
                 "duration",
                 "filename",
                 "fps",
+                "id",
                 "publish",
                 "resolution",
                 "size",
-                "title",
-                "uuid"
+                "title"
             ],
             "properties": {
                 "bitrate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "date": {
                     "type": "string"
@@ -159,7 +150,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "fps": {
-                    "type": "integer"
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
                 },
                 "publish": {
                     "type": "boolean"
@@ -171,9 +165,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
-                    "type": "string"
-                },
-                "uuid": {
                     "type": "string"
                 }
             }

@@ -1,13 +1,8 @@
 definitions:
-  main.message:
-    properties:
-      message:
-        type: string
-    type: object
   main.vod:
     properties:
       bitrate:
-        type: integer
+        type: number
       date:
         type: string
       duration:
@@ -15,7 +10,9 @@ definitions:
       filename:
         type: string
       fps:
-        type: integer
+        type: number
+      id:
+        type: string
       publish:
         type: boolean
       resolution:
@@ -24,19 +21,16 @@ definitions:
         type: integer
       title:
         type: string
-      uuid:
-        type: string
     required:
-    - bitrate
     - date
     - duration
     - filename
     - fps
+    - id
     - publish
     - resolution
     - size
     - title
-    - uuid
     type: object
 info:
   contact: {}
@@ -57,7 +51,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/main.message'
+            type: string
       summary: Get all vods
       tags:
       - Vods
@@ -77,22 +71,22 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.message'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/main.message'
+            type: string
       summary: Create vod
       tags:
       - Vods
-  /vods/{uuid}:
+  /vods/{id}:
     get:
       consumes:
       - application/json
       parameters:
       - description: Unique Identifier
         in: path
-        name: uuid
+        name: id
         required: true
         type: string
       produces:
@@ -105,8 +99,8 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/main.message'
-      summary: Get vod by uuid
+            type: string
+      summary: Get vod by id
       tags:
       - Vods
 swagger: "2.0"
