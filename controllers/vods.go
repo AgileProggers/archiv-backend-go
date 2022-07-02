@@ -18,11 +18,14 @@ import (
 // @Router /vods/ [get]
 func GetVods(c *gin.Context) {
 	var vods []models.Vod
-	models.DB.Find(&vods)
-	if len(vods) == 0 {
+
+	result := models.DB.Model((&vods)).Where("publish = ?", true).Find(&vods)
+
+	if result.RowsAffected < 1 {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No vods found"})
 		return
 	}
+
 	c.IndentedJSON(http.StatusOK, vods)
 }
 
@@ -39,7 +42,9 @@ func GetVodById(c *gin.Context) {
 	var vods []models.Vod
 	var v models.Vod
 
-	if err := models.DB.Model((&vods)).Where("id = ?", c.Param("id")).First(&v).Error; err != nil {
+	result := models.DB.Model((&vods)).Where("id = ?", c.Param("id")).Where("publish = ?", true).Limit(1).Find(&v)
+
+	if result.RowsAffected < 1 {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Vod not found"})
 		return
 	}
@@ -59,7 +64,6 @@ func GetVodById(c *gin.Context) {
 func CreateVod(c *gin.Context) {
 	var newVod models.Vod
 	var vods []models.Vod
-	var count int64
 
 	models.DB.Find(&vods)
 
@@ -68,7 +72,9 @@ func CreateVod(c *gin.Context) {
 		return
 	}
 
-	if models.DB.Model(&vods).Where("id = ?", newVod.ID).Count(&count); count > 0 {
+	result := models.DB.Model(&vods).Where("id = ?", newVod.ID)
+
+	if result.RowsAffected < 1 {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Vod already exists. Use PATCH to modify existing vods."})
 		return
 	}
