@@ -34,7 +34,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.vod"
+                                "$ref": "#/definitions/models.Vod"
                             }
                         }
                     },
@@ -109,7 +109,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.vod"
+                            "$ref": "#/definitions/models.Vod"
                         }
                     },
                     "404": {
@@ -123,7 +123,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.vod": {
+        "models.Vod": {
             "type": "object",
             "required": [
                 "date",

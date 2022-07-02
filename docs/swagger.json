@@ -22,7 +22,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.vod"
+                                "$ref": "#/definitions/models.Vod"
                             }
                         }
                     },
@@ -97,7 +97,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.vod"
+                            "$ref": "#/definitions/models.Vod"
                         }
                     },
                     "404": {
@@ -111,7 +111,7 @@
         }
     },
     "definitions": {
-        "main.vod": {
+        "models.Vod": {
             "type": "object",
             "required": [
                 "date",

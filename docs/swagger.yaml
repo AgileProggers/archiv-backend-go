@@ -1,5 +1,5 @@
 definitions:
-  main.vod:
+  models.Vod:
     properties:
       bitrate:
         type: number
@@ -46,7 +46,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/main.vod'
+              $ref: '#/definitions/models.Vod'
             type: array
         "404":
           description: Not Found
@@ -95,7 +95,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.vod'
+            $ref: '#/definitions/models.Vod'
         "404":
           description: Not Found
           schema:
