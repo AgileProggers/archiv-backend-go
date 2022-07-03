@@ -1,6 +1,7 @@
 package models
 
 type Creator struct {
-	ID   int    `gorm:"index:unique" json:"id" binding:"required"`
-	Name string `json:"name" binding:"required"`
+	UUID  int    `gorm:"primaryKey;not null" json:"uuid" binding:"required"`
+	Name  string `gorm:"not null" json:"name" binding:"required"`
+	Clips []Clip `gorm:"foreignKey:CreatorRefer" json:"clips"`
 }

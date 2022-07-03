@@ -1,8 +1,74 @@
 definitions:
+  models.Clip:
+    properties:
+      creator:
+        $ref: '#/definitions/models.Creator'
+      date:
+        type: string
+      duration:
+        type: integer
+      filename:
+        type: string
+      game:
+        $ref: '#/definitions/models.Game'
+      resolution:
+        type: string
+      size:
+        type: integer
+      title:
+        type: string
+      uuid:
+        type: string
+      view_count:
+        type: integer
+      vod:
+        $ref: '#/definitions/models.Vod'
+    required:
+    - date
+    - duration
+    - filename
+    - resolution
+    - size
+    - title
+    - view_count
+    type: object
+  models.Creator:
+    properties:
+      clips:
+        items:
+          $ref: '#/definitions/models.Clip'
+        type: array
+      name:
+        type: string
+      uuid:
+        type: integer
+    required:
+    - name
+    - uuid
+    type: object
+  models.Game:
+    properties:
+      box_art:
+        type: string
+      clips:
+        items:
+          $ref: '#/definitions/models.Clip'
+        type: array
+      name:
+        type: string
+      uuid:
+        type: integer
+    required:
+    - box_art
+    - name
+    - uuid
+    type: object
   models.Vod:
     properties:
-      bitrate:
-        type: number
+      clips:
+        items:
+          $ref: '#/definitions/models.Clip'
+        type: array
       date:
         type: string
       duration:
@@ -11,8 +77,6 @@ definitions:
         type: string
       fps:
         type: number
-      id:
-        type: string
       publish:
         type: boolean
       resolution:
@@ -21,20 +85,220 @@ definitions:
         type: integer
       title:
         type: string
+      uuid:
+        type: string
     required:
     - date
     - duration
     - filename
     - fps
-    - id
     - publish
     - resolution
     - size
     - title
+    - uuid
     type: object
 info:
   contact: {}
 paths:
+  /clips/:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Clip'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get all clips
+      tags:
+      - Clips
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Clip dict
+        in: body
+        name: Body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Create clip
+      tags:
+      - Clips
+  /clips/{uuid}:
+    get:
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Clip'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get clips by uuid
+      tags:
+      - Clips
+  /creators/:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Creator'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get all creators
+      tags:
+      - Creators
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Creator dict
+        in: body
+        name: Body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Create creator
+      tags:
+      - Creators
+  /creators/{uuid}:
+    get:
+      parameters:
+      - description: Unique Identifyer
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Creator'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get creator by uuid
+      tags:
+      - Creators
+  /games/:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Game'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get all games
+      tags:
+      - Games
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Game dict
+        in: body
+        name: Body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Create game
+      tags:
+      - Games
+  /games/{uuid}:
+    get:
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Game'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get game by uuid
+      tags:
+      - Games
   /vods/:
     get:
       consumes:
@@ -79,14 +343,12 @@ paths:
       summary: Create vod
       tags:
       - Vods
-  /vods/{id}:
+  /vods/{uuid}:
     get:
-      consumes:
-      - application/json
       parameters:
       - description: Unique Identifier
         in: path
-        name: id
+        name: uuid
         required: true
         type: string
       produces:
@@ -100,7 +362,7 @@ paths:
           description: Not Found
           schema:
             type: string
-      summary: Get vod by id
+      summary: Get vod by uuid
       tags:
       - Vods
 swagger: "2.0"

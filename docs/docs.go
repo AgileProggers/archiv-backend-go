@@ -16,6 +16,312 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/clips/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clips"
+                ],
+                "summary": "Get all clips",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Clip"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clips"
+                ],
+                "summary": "Create clip",
+                "parameters": [
+                    {
+                        "description": "Clip dict",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/clips/{uuid}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clips"
+                ],
+                "summary": "Get clips by uuid",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unique Identifier",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Clip"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/creators/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Creators"
+                ],
+                "summary": "Get all creators",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Creator"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Creators"
+                ],
+                "summary": "Create creator",
+                "parameters": [
+                    {
+                        "description": "Creator dict",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/creators/{uuid}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Creators"
+                ],
+                "summary": "Get creator by uuid",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unique Identifyer",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Creator"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games"
+                ],
+                "summary": "Get all games",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Game"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games"
+                ],
+                "summary": "Create game",
+                "parameters": [
+                    {
+                        "description": "Game dict",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{uuid}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games"
+                ],
+                "summary": "Get game by uuid",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unique Identifier",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Game"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/vods/": {
             "get": {
                 "consumes": [
@@ -84,23 +390,20 @@ const docTemplate = `{
                 }
             }
         },
-        "/vods/{id}": {
+        "/vods/{uuid}": {
             "get": {
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Vods"
                 ],
-                "summary": "Get vod by id",
+                "summary": "Get vod by uuid",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Unique Identifier",
-                        "name": "id",
+                        "name": "uuid",
                         "in": "path",
                         "required": true
                     }
@@ -123,6 +426,99 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.Clip": {
+            "type": "object",
+            "required": [
+                "date",
+                "duration",
+                "filename",
+                "resolution",
+                "size",
+                "title",
+                "view_count"
+            ],
+            "properties": {
+                "creator": {
+                    "$ref": "#/definitions/models.Creator"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "game": {
+                    "$ref": "#/definitions/models.Game"
+                },
+                "resolution": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                },
+                "vod": {
+                    "$ref": "#/definitions/models.Vod"
+                }
+            }
+        },
+        "models.Creator": {
+            "type": "object",
+            "required": [
+                "name",
+                "uuid"
+            ],
+            "properties": {
+                "clips": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Clip"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Game": {
+            "type": "object",
+            "required": [
+                "box_art",
+                "name",
+                "uuid"
+            ],
+            "properties": {
+                "box_art": {
+                    "type": "string"
+                },
+                "clips": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Clip"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Vod": {
             "type": "object",
             "required": [
@@ -130,15 +526,18 @@ const docTemplate = `{
                 "duration",
                 "filename",
                 "fps",
-                "id",
                 "publish",
                 "resolution",
                 "size",
-                "title"
+                "title",
+                "uuid"
             ],
             "properties": {
-                "bitrate": {
-                    "type": "number"
+                "clips": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Clip"
+                    }
                 },
                 "date": {
                     "type": "string"
@@ -152,9 +551,6 @@ const docTemplate = `{
                 "fps": {
                     "type": "number"
                 },
-                "id": {
-                    "type": "string"
-                },
                 "publish": {
                     "type": "boolean"
                 },
@@ -165,6 +561,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
+                    "type": "string"
+                },
+                "uuid": {
                     "type": "string"
                 }
             }

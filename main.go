@@ -21,7 +21,25 @@ func main() {
 		{
 			vodsGroup.Get("/", controllers.GetVods)
 			vodsGroup.Post("/", controllers.CreateVod)
-			vodsGroup.Get("/:id", controllers.GetVodById)
+			vodsGroup.Get("/:uuid", controllers.GetVodByUUID)
+		}
+		clipsGroup := v1.Group("/clips")
+		{
+			clipsGroup.Get("/", controllers.GetClips)
+			clipsGroup.Post("/", controllers.CreateClip)
+			clipsGroup.Get("/:uuid", controllers.GetClipsByUUID)
+		}
+		gamesGroup := v1.Group("/games")
+		{
+			gamesGroup.Get("/", controllers.GetGames)
+			gamesGroup.Post("/", controllers.CreateGame)
+			gamesGroup.Get("/:uuid", controllers.GetGameByUUID)
+		}
+		creatorsGroup := v1.Group("/creators")
+		{
+			creatorsGroup.Get("/", controllers.GetCreators)
+			creatorsGroup.Post("/", controllers.CreateCreator)
+			creatorsGroup.Get("/:uuid", controllers.GetCreatorByUUID)
 		}
 	}
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)

@@ -13,7 +13,7 @@ func ConnectDatabase() {
 	}
 
 	// Migrate the schema
-	database.AutoMigrate(&models.Vod{})
+	database.AutoMigrate(&models.Vod{}, &models.Clip{}, &models.Game{}, &models.Creator{})
 
 	DB = database
 }
