@@ -1,30 +1,33 @@
 package main
 
 import (
-	"github.com/AgileProggers/archiv-backend-go/controllers"
-	"github.com/AgileProggers/archiv-backend-go/docs"
-	"github.com/AgileProggers/archiv-backend-go/models"
+	"log"
 
-	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/AgileProggers/archiv-backend-go/controllers"
+	"github.com/AgileProggers/archiv-backend-go/database"
+	"github.com/AgileProggers/archiv-backend-go/docs"
+
+	"github.com/gofiber/fiber/v2"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
 func main() {
-	router := gin.Default()
-	router.SetTrustedProxies([]string{"*"})
-	models.ConnectDatabase()
+	app := fiber.New()
+	database.ConnectDatabase()
 	docs.SwaggerInfo.BasePath = "/api/v1"
-	v1 := router.Group("/api/v1")
+	v1 := app.Group("/api/v1")
 	{
 		vodsGroup := v1.Group("/vods")
 		{
-			vodsGroup.GET("/", controllers.GetVods)
-			vodsGroup.POST("/", controllers.CreateVod)
-			vodsGroup.GET("/:id", controllers.GetVodById)
+			vodsGroup.Get("/", controllers.GetVods)
+			vodsGroup.Post("/", controllers.CreateVod)
+			vodsGroup.Get("/:id", controllers.GetVodById)
 		}
 	}
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler,
-		ginSwagger.DefaultModelsExpandDepth(-1)))
-	router.Run("localhost:8080")
+	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+
+	err := app.Listen(":8080")
+	if err != nil {
+		log.Fatalf("fiber.Listen failed %s", err)
+	}
 }

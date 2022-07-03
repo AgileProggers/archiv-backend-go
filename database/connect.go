@@ -1,11 +1,10 @@
-package models
+package database
 
 import (
+	"github.com/AgileProggers/archiv-backend-go/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
-
-var DB *gorm.DB
 
 func ConnectDatabase() {
 	database, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
@@ -14,7 +13,7 @@ func ConnectDatabase() {
 	}
 
 	// Migrate the schema
-	database.AutoMigrate(&Vod{})
+	database.AutoMigrate(&models.Vod{})
 
 	DB = database
 }

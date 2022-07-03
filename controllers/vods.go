@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 // GetVods godoc
@@ -16,17 +17,16 @@ import (
 // @Success 200 {array} models.Vod
 // @Failure 404 {string} string
 // @Router /vods/ [get]
-func GetVods(c *gin.Context) {
+func GetVods(c *fiber.Ctx) error {
 	var vods []models.Vod
 
-	result := models.DB.Model((&vods)).Where("publish = ?", true).Find(&vods)
+	result := database.DB.Model((&vods)).Where("publish = ?", true).Find(&vods)
 
 	if result.RowsAffected < 1 {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No vods found"})
-		return
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No vods found"})
 	}
 
-	c.IndentedJSON(http.StatusOK, vods)
+	return c.Status(http.StatusOK).JSON(vods)
 }
 
 // GetVodByID godoc
@@ -38,18 +38,17 @@ func GetVods(c *gin.Context) {
 // @Failure 404 {string} string
 // @Router /vods/{id} [get]
 // @Param id path string true "Unique Identifier"
-func GetVodById(c *gin.Context) {
+func GetVodById(c *fiber.Ctx) error {
 	var vods []models.Vod
 	var v models.Vod
 
-	result := models.DB.Model((&vods)).Where("id = ?", c.Param("id")).Where("publish = ?", true).Limit(1).Find(&v)
+	result := database.DB.Model((&vods)).Where("id = ?", c.Params("id")).Where("publish = ?", true).Limit(1).Find(&v)
 
 	if result.RowsAffected < 1 {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Vod not found"})
-		return
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Vod not found"})
 	}
 
-	c.IndentedJSON(http.StatusOK, v)
+	return c.Status(http.StatusOK).JSON(v)
 }
 
 // CreateVod godoc
@@ -61,22 +60,19 @@ func GetVodById(c *gin.Context) {
 // @Failure 400 {string} string
 // @Router /vods/ [post]
 // @Param Body body object true "Vod dict"
-func CreateVod(c *gin.Context) {
+func CreateVod(c *fiber.Ctx) error {
 	var newVod models.Vod
 	var vods []models.Vod
+	var exists models.Vod
 
-	models.DB.Find(&vods)
+	database.DB.Find(&vods)
 
-	if err := c.BindJSON(&newVod); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
+	if err := c.BodyParser(&newVod); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
 
-	result := models.DB.Model(&vods).Where("id = ?", newVod.ID)
-
-	if result.RowsAffected < 1 {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Vod already exists. Use PATCH to modify existing vods."})
-		return
+	if result := database.DB.Model(&vods).Where("id = ?", newVod.ID).Find(&exists); result.RowsAffected > 0 {
+		return c.Status(http.StatusConflict).JSON(fiber.Map{"message": "Vod already exists. Use PATCH to modify existing vods."})
 	}
 
 	v := models.Vod{
@@ -91,6 +87,6 @@ func CreateVod(c *gin.Context) {
 		Publish:    newVod.Publish,
 	}
 
-	models.DB.Create(&v)
-	c.IndentedJSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("%s created", newVod.ID)})
+	database.DB.Create(&v)
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": fmt.Sprintf("%s created", newVod.ID)})
 }

@@ -11,5 +11,5 @@ type Vod struct {
 	Resolution string    `json:"resolution" binding:"required"`
 	Fps        float32   `json:"fps" binding:"required"`
 	Size       int       `json:"size" binding:"required"`
-	Publish    bool      `json:"-" binding:"required"`
+	Publish    bool      `json:"publish" binding:"required"`
 }
