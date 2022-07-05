@@ -57,7 +57,7 @@ func GetVodByUUID(c *fiber.Ctx) error {
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Router /vods/ [post]
-// @Param Body body object true "Vod dict"
+// @Param Body body models.Vod true "Vod dict"
 func CreateVod(c *fiber.Ctx) error {
 	var newVod models.Vod
 	var vod models.Vod

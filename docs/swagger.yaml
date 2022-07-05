@@ -123,7 +123,7 @@ paths:
         name: Body
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.Clip'
       produces:
       - application/json
       responses:
@@ -189,7 +189,7 @@ paths:
         name: Body
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.Creator'
       produces:
       - application/json
       responses:
@@ -255,7 +255,7 @@ paths:
         name: Body
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.Game'
       produces:
       - application/json
       responses:
@@ -321,7 +321,7 @@ paths:
         name: Body
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.Vod'
       produces:
       - application/json
       responses:

@@ -57,7 +57,7 @@ func GetCreatorByUUID(c *fiber.Ctx) error {
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Router /creators/ [post]
-// @Param Body body object true "Creator dict"
+// @Param Body body models.Creator true "Creator dict"
 func CreateCreator(c *fiber.Ctx) error {
 	var newCreator models.Creator
 	var creator models.Creator

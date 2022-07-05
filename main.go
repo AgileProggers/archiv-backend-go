@@ -8,7 +8,7 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/docs"
 
 	"github.com/gofiber/fiber/v2"
-	fiberSwagger "github.com/swaggo/fiber-swagger"
+	"github.com/gofiber/swagger"
 )
 
 func main() {
@@ -42,7 +42,9 @@ func main() {
 			creatorsGroup.Get("/:uuid", controllers.GetCreatorByUUID)
 		}
 	}
-	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+	app.Get("/swagger/*", swagger.New(swagger.Config{
+		DefaultModelsExpandDepth: -1,
+	}))
 
 	err := app.Listen(":8080")
 	if err != nil {

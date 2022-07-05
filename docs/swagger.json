@@ -52,7 +52,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.Clip"
                         }
                     }
                 ],
@@ -154,7 +154,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.Creator"
                         }
                     }
                 ],
@@ -256,7 +256,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.Game"
                         }
                     }
                 ],
@@ -358,7 +358,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.Vod"
                         }
                     }
                 ],

@@ -58,7 +58,7 @@ func GetGameByUUID(c *fiber.Ctx) error {
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Router /games/ [post]
-// @Param Body body object true "Game dict"
+// @Param Body body models.Game true "Game dict"
 func CreateGame(c *fiber.Ctx) error {
 	var newGame models.Game
 	var game models.Game

@@ -57,7 +57,7 @@ func GetClipsByUUID(c *fiber.Ctx) error {
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Router /clips/ [post]
-// @Param Body body object true "Clip dict"
+// @Param Body body models.Clip true "Clip dict"
 func CreateClip(c *fiber.Ctx) error {
 	var newClip models.Clip
 	var clip models.Clip
