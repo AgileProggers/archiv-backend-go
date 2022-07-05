@@ -439,7 +439,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "creator": {
-                    "$ref": "#/definitions/models.Creator"
+                    "type": "integer"
                 },
                 "date": {
                     "type": "string"
@@ -451,7 +451,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "game": {
-                    "$ref": "#/definitions/models.Game"
+                    "type": "integer"
                 },
                 "resolution": {
                     "type": "string"
@@ -469,15 +469,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "vod": {
-                    "$ref": "#/definitions/models.Vod"
+                    "type": "string"
                 }
             }
         },
         "models.Creator": {
             "type": "object",
             "required": [
-                "name",
-                "uuid"
+                "name"
             ],
             "properties": {
                 "clips": {
@@ -498,18 +497,11 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "box_art",
-                "name",
-                "uuid"
+                "name"
             ],
             "properties": {
                 "box_art": {
                     "type": "string"
-                },
-                "clips": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Clip"
-                    }
                 },
                 "name": {
                     "type": "string"
@@ -529,8 +521,7 @@ const docTemplate = `{
                 "publish",
                 "resolution",
                 "size",
-                "title",
-                "uuid"
+                "title"
             ],
             "properties": {
                 "clips": {

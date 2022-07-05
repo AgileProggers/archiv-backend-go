@@ -2,7 +2,7 @@ definitions:
   models.Clip:
     properties:
       creator:
-        $ref: '#/definitions/models.Creator'
+        type: integer
       date:
         type: string
       duration:
@@ -10,7 +10,7 @@ definitions:
       filename:
         type: string
       game:
-        $ref: '#/definitions/models.Game'
+        type: integer
       resolution:
         type: string
       size:
@@ -22,7 +22,7 @@ definitions:
       view_count:
         type: integer
       vod:
-        $ref: '#/definitions/models.Vod'
+        type: string
     required:
     - date
     - duration
@@ -44,16 +44,11 @@ definitions:
         type: integer
     required:
     - name
-    - uuid
     type: object
   models.Game:
     properties:
       box_art:
         type: string
-      clips:
-        items:
-          $ref: '#/definitions/models.Clip'
-        type: array
       name:
         type: string
       uuid:
@@ -61,7 +56,6 @@ definitions:
     required:
     - box_art
     - name
-    - uuid
     type: object
   models.Vod:
     properties:
@@ -96,7 +90,6 @@ definitions:
     - resolution
     - size
     - title
-    - uuid
     type: object
 info:
   contact: {}
