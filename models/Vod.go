@@ -1,9 +1,11 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Vod struct {
-	UUID       string    `gorm:"primaryKey;not null" json:"uuid" binding:"required"`
+	UUID       string    `gorm:"primaryKey;uniqueIndex" json:"uuid"`
 	Title      string    `gorm:"not null" json:"title" binding:"required"`
 	Duration   int       `gorm:"not null" json:"duration" binding:"required"`
 	Date       time.Time `gorm:"not null" json:"date" time_format:"2006-01-02T15:04:05.000Z" binding:"required"`
@@ -12,5 +14,5 @@ type Vod struct {
 	Fps        float32   `gorm:"not null" json:"fps" binding:"required"`
 	Size       int       `gorm:"not null" json:"size" binding:"required"`
 	Publish    bool      `gorm:"not null" json:"publish" binding:"required"`
-	Clips      []Clip    `gorm:"foreignKey:VodRefer" json:"clips"`
+	Clips      []Clip    `gorm:"foreignKey:VodID" json:"clips"`
 }

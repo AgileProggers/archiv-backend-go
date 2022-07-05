@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/AgileProggers/archiv-backend-go/database"
@@ -40,15 +39,14 @@ func GetVods(c *fiber.Ctx) error {
 // @Param uuid path string true "Unique Identifier"
 func GetVodByUUID(c *fiber.Ctx) error {
 	var vod models.Vod
-	var v models.Vod
 
-	database.DB.Model((&vod)).Where("uuid = ?", c.Params("uuid")).Where("publish = ?", true).Preload("Clips").First(&v)
+	database.DB.Model((&vod)).Preload("Clips").Find(&vod, "uuid = ?", c.Params("uuid"))
 
-	if v.UUID == "" {
+	if vod.UUID == "" {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Vod not found"})
 	}
 
-	return c.Status(http.StatusOK).JSON(v)
+	return c.Status(http.StatusOK).JSON(vod)
 }
 
 // CreateVod godoc
@@ -77,5 +75,5 @@ func CreateVod(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": fmt.Sprintf("%s created", newVod.UUID)})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
 }

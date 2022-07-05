@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/AgileProggers/archiv-backend-go/database"
@@ -30,7 +29,7 @@ func GetClips(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(clips)
 }
 
-// GetClipsByUUID godoc
+// GetClipsByID godoc
 // @Summary Get clips by uuid
 // @Tags Clips
 // @Produce json
@@ -41,7 +40,7 @@ func GetClips(c *fiber.Ctx) error {
 func GetClipsByUUID(c *fiber.Ctx) error {
 	var clip models.Clip
 
-	result := database.DB.Model((&clip)).Where("uuid = ?", c.Params("uuid")).Limit(1).Find(&clip)
+	result := database.DB.Model((&clip)).Find(&clip, "uuid = ?", c.Params("uuid"))
 
 	if result.RowsAffected < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Clip not found"})
@@ -76,5 +75,5 @@ func CreateClip(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": fmt.Sprintf("%s created", newClip.UUID)})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
 }

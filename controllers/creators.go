@@ -1,14 +1,11 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm/clause"
 )
 
 // GetCreators godoc
@@ -22,7 +19,7 @@ import (
 func GetCreators(c *fiber.Ctx) error {
 	var creators []models.Creator
 
-	result := database.DB.Model((&creators)).Preload(clause.Associations).Find(&creators)
+	result := database.DB.Model((&creators)).Find(&creators)
 
 	if result.RowsAffected < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No creators found"})
@@ -31,7 +28,7 @@ func GetCreators(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(creators)
 }
 
-// GetCreatorByUUID godoc
+// GetCreatorByID godoc
 // @Summary Get creator by uuid
 // @Tags Creators
 // @Produce json
@@ -43,7 +40,7 @@ func GetCreatorByUUID(c *fiber.Ctx) error {
 	var creators []models.Creator
 	var cr models.Creator
 
-	result := database.DB.Model((&creators)).Where("uuid = ?", c.Params("uuid")).Limit(1).Find(&cr)
+	result := database.DB.Model((&creators)).Preload("Clips").Find(&cr, "uuid = ?", c.Params("uuid"))
 
 	if result.RowsAffected < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Creator not found"})
@@ -69,8 +66,8 @@ func CreateCreator(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
 
-	database.DB.Model(&creator).Find(&creator, "UUID = ?", newCreator.UUID)
-	if creator.UUID != 0 {
+	database.DB.Model(&creator).Find(&creator, "uuid = ?", newCreator.UUID)
+	if creator.UUID > 0 {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Creator already exists. Use PATCH to modify existing creators."})
 	}
 
@@ -78,5 +75,5 @@ func CreateCreator(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": fmt.Sprintf("%s created", strconv.Itoa(newCreator.UUID))})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
 }

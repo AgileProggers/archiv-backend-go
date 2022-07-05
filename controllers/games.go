@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
@@ -31,7 +29,7 @@ func GetGames(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(games)
 }
 
-// GetGameByUUID godoc
+// GetGameByID godoc
 // @Summary Get game by uuid
 // @Tags Games
 // @Produce json
@@ -43,7 +41,7 @@ func GetGameByUUID(c *fiber.Ctx) error {
 	game := new(models.Game)
 	var g models.Game
 
-	result := database.DB.Model((&game)).Where("uuid = ?", c.Params("uuid")).Limit(1).Find(&g)
+	result := database.DB.Model((&game)).Find(&g, "uuid = ?", c.Params("uuid"))
 
 	if result.RowsAffected < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Game not found"})
@@ -70,7 +68,7 @@ func CreateGame(c *fiber.Ctx) error {
 	}
 
 	database.DB.Model(&game).Find(&game, "uuid = ?", newGame.UUID)
-	if game.UUID != 0 {
+	if game.UUID > 0 {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Game already exists. Use PATCH to modify existing games."})
 	}
 
@@ -78,5 +76,5 @@ func CreateGame(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": fmt.Sprintf("%s created", strconv.Itoa(newGame.UUID))})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
 }
