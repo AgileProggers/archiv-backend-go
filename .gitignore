@@ -1,2 +1,3 @@
 *.db
 fill_db.py
+/archiv-backend-go

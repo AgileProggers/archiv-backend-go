@@ -8,6 +8,7 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/docs"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/swagger"
 )
 
@@ -45,7 +46,7 @@ func main() {
 	app.Get("/swagger/*", swagger.New(swagger.Config{
 		DefaultModelsExpandDepth: -1,
 	}))
-
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "Archiv API Metrics Page"}))
 	err := app.Listen(":8080")
 	if err != nil {
 		log.Fatalf("fiber.Listen failed %s", err)
