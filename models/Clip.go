@@ -12,8 +12,8 @@ type Clip struct {
 	Filename   string    `gorm:"not null" json:"filename" binding:"required"`
 	Resolution string    `gorm:"not null" json:"resolution" binding:"required"`
 	Size       int       `gorm:"not null" json:"size" binding:"required"`
-	Viewcount  int       `gorm:"not null" json:"view_count" binding:"required"`
-	CreatorID  int       `json:"creator"`
-	GameID     int       `json:"game"`
-	VodID      string    `json:"vod"`
+	Viewcount  int       `gorm:"not null" json:"viewcount" binding:"required"`
+	Creator    int       `json:"creator"`
+	Game       int       `json:"game"`
+	Vod        string    `json:"vod"`
 }

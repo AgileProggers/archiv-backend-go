@@ -14,5 +14,5 @@ type Vod struct {
 	Fps        float32   `gorm:"not null" json:"fps" binding:"required"`
 	Size       int       `gorm:"not null" json:"size" binding:"required"`
 	Publish    bool      `gorm:"not null" json:"publish" binding:"required"`
-	Clips      []Clip    `gorm:"foreignKey:VodID" json:"clips"`
+	Clips      []Clip    `gorm:"foreignKey:Vod" json:"clips"`
 }
