@@ -16,10 +16,17 @@ import (
 // @Success 200 {array} models.Creator
 // @Failure 404 {string} string
 // @Router /creators/ [get]
+// @Param uuid query int false "The uuid of a creator"
+// @Param name query string false "The name of a creator"
 func GetCreators(c *fiber.Ctx) error {
+	var creator models.Creator
 	var creators []models.Creator
 
-	result := database.DB.Model((&creators)).Find(&creators)
+	if err := c.QueryParser(&creator); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
+	}
+
+	result := database.DB.Model((&creator)).Where(&creator).Find(&creators)
 
 	if result.RowsAffected < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No creators found"})

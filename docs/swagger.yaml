@@ -215,6 +215,15 @@ paths:
     get:
       consumes:
       - application/json
+      parameters:
+      - description: The uuid of a creator
+        in: query
+        name: uuid
+        type: integer
+      - description: The name of a creator
+        in: query
+        name: name
+        type: string
       produces:
       - application/json
       responses:
@@ -281,6 +290,19 @@ paths:
     get:
       consumes:
       - application/json
+      parameters:
+      - description: The uuid of a game
+        in: query
+        name: uuid
+        type: integer
+      - description: The name of a game
+        in: query
+        name: name
+        type: string
+      - description: The box_art of a game
+        in: query
+        name: box_art
+        type: string
       produces:
       - application/json
       responses:

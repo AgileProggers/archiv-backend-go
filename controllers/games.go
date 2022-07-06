@@ -16,11 +16,18 @@ import (
 // @Success 200 {array} models.Game
 // @Failure 404 {string} string
 // @Router /games/ [get]
+// @Param uuid query int false "The uuid of a game"
+// @Param name query string false "The name of a game"
+// @Param box_art query string false "The box_art of a game"
 func GetGames(c *fiber.Ctx) error {
-	game := new(models.Game)
+	var game models.Game
 	var games []models.Game
 
-	result := database.DB.Model((&game)).Find(&games)
+	if err := c.QueryParser(&game); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
+	}
+
+	result := database.DB.Model((&game)).Where(&game).Find(&games)
 
 	if result.RowsAffected < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No games found"})

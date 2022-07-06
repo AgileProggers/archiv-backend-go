@@ -204,6 +204,20 @@ const docTemplate = `{
                     "Creators"
                 ],
                 "summary": "Get all creators",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The uuid of a creator",
+                        "name": "uuid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The name of a creator",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -306,6 +320,26 @@ const docTemplate = `{
                     "Games"
                 ],
                 "summary": "Get all games",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The uuid of a game",
+                        "name": "uuid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The name of a game",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The box_art of a game",
+                        "name": "box_art",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
