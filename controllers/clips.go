@@ -16,11 +16,26 @@ import (
 // @Success 200 {array} models.Clip
 // @Failure 404 {string} string
 // @Router /clips/ [get]
+// @Param uuid query string false "The uuid of a clip"
+// @Param title query string false "The title of a clip"
+// @Param duration query int false "The duration of a clip"
+// @Param date query string false "The date of a clip"
+// @Param filename query string false "The filename of a clip"
+// @Param resolution query string false "The resolution of a clip"
+// @Param size query int false "The size of a clip"
+// @Param viewcount query int false "The viewcount of a clip"
+// @Param creator query int false "The creator id of a clip"
+// @Param game query int false "The game id of a clip"
+// @Param vod query string false "The vod id of a clip"
 func GetClips(c *fiber.Ctx) error {
 	var clip models.Clip
 	var clips []models.Clip
 
-	database.DB.Model((&clip)).Order("date desc").Find(&clips)
+	if err := c.QueryParser(&clip); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "invalid params"})
+	}
+
+	database.DB.Model((&clip)).Where(&clip).Order("date desc").Find(&clips)
 
 	if len(clips) < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No clips found"})

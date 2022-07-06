@@ -28,6 +28,74 @@ const docTemplate = `{
                     "Clips"
                 ],
                 "summary": "Get all clips",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The uuid of a clip",
+                        "name": "uuid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The title of a clip",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The duration of a clip",
+                        "name": "duration",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The date of a clip",
+                        "name": "date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The filename of a clip",
+                        "name": "filename",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The resolution of a clip",
+                        "name": "resolution",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The size of a clip",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The viewcount of a clip",
+                        "name": "viewcount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The creator id of a clip",
+                        "name": "creator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The game id of a clip",
+                        "name": "game",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The vod id of a clip",
+                        "name": "vod",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -435,7 +503,7 @@ const docTemplate = `{
                 "resolution",
                 "size",
                 "title",
-                "view_count"
+                "viewcount"
             ],
             "properties": {
                 "creator": {
@@ -465,7 +533,7 @@ const docTemplate = `{
                 "uuid": {
                     "type": "string"
                 },
-                "view_count": {
+                "viewcount": {
                     "type": "integer"
                 },
                 "vod": {
