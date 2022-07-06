@@ -43,6 +43,7 @@ func main() {
 			creatorsGroup.Get("/:uuid", controllers.GetCreatorByUUID)
 		}
 	}
+	v1.Get("/years", controllers.GetYears)
 	app.Get("/swagger/*", swagger.New(swagger.Config{
 		DefaultModelsExpandDepth: -1,
 	}))

@@ -13,7 +13,7 @@ type Clip struct {
 	Resolution string    `gorm:"not null" json:"resolution" binding:"required"`
 	Size       int       `gorm:"not null" json:"size" binding:"required"`
 	Viewcount  int       `gorm:"not null" json:"viewcount" binding:"required"`
-	Creator    int       `json:"creator"`
-	Game       int       `json:"game"`
-	Vod        string    `json:"vod"`
+	Creator    int       `gorm:"colum:creator" json:"creator"`
+	Game       int       `gorm:"colum:game" json:"game"`
+	Vod        string    `gorm:"colum:vod" json:"vod"`
 }

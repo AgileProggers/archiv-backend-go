@@ -112,7 +112,20 @@ func CreateClip(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Clip already exists. Use PATCH to modify existing clips."})
 	}
 
-	if err := database.DB.Model(&newClip).Create(&newClip).Error; err != nil {
+	query := database.DB.Model(&newClip)
+	omits := []string{}
+
+	if newClip.Creator == 0 {
+		omits = append(omits, "Creator")
+	}
+	if newClip.Game == 0 {
+		omits = append(omits, "Game")
+	}
+	if newClip.Vod == "" {
+		omits = append(omits, "Vod")
+	}
+
+	if err := query.Omit(strings.Join(omits, ",")).Create(&newClip).Error; err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
 	}
 
