@@ -20,7 +20,7 @@ func GetClips(c *fiber.Ctx) error {
 	var clip models.Clip
 	var clips []models.Clip
 
-	database.DB.Model((&clip)).Find(&clips)
+	database.DB.Model((&clip)).Order("date desc").Find(&clips)
 
 	if len(clips) < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No clips found"})

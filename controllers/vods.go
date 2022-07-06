@@ -20,7 +20,7 @@ func GetVods(c *fiber.Ctx) error {
 	var vod models.Vod
 	var vods []models.Vod
 
-	database.DB.Model((&vod)).Where("publish = ?", true).Preload("Clips").Find(&vods)
+	database.DB.Model((&vod)).Where("publish = ?", true).Order("date desc").Preload("Clips").Find(&vods)
 
 	if len(vods) < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No vods found"})
