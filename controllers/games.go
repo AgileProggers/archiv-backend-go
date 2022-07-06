@@ -64,7 +64,7 @@ func CreateGame(c *fiber.Ctx) error {
 	var game models.Game
 
 	if err := c.BodyParser(&newGame); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
 	}
 
 	database.DB.Model(&game).Find(&game, "uuid = ?", newGame.UUID)
@@ -73,7 +73,7 @@ func CreateGame(c *fiber.Ctx) error {
 	}
 
 	if err := database.DB.Model(&game).Create(&newGame).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})

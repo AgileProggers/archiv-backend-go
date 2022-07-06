@@ -2,11 +2,21 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
 	"github.com/gofiber/fiber/v2"
 )
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
 
 // GetClips godoc
 // @Summary Get all clips
@@ -27,15 +37,31 @@ import (
 // @Param creator query int false "The creator id of a clip"
 // @Param game query int false "The game id of a clip"
 // @Param vod query string false "The vod id of a clip"
+// @Param order query string false "Set order direction divided by comma. Possible ordering values: 'date', 'duration', 'size'. Possible directions: 'asc', 'desc'. Example: 'date,desc'"
 func GetClips(c *fiber.Ctx) error {
 	var clip models.Clip
 	var clips []models.Clip
 
 	if err := c.QueryParser(&clip); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "invalid params"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	database.DB.Model((&clip)).Where(&clip).Order("date desc").Find(&clips)
+	// custom ordering query
+	if orderParams := c.Query("order"); orderParams != "" {
+		order := strings.Split(orderParams, ",")
+		if len(order) != 2 {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid order params. Example: 'date,desc'"})
+		}
+		if !stringInSlice(order[0], []string{"date", "duration", "size"}) {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid first order param. 'date', 'duration' or 'size'"})
+		}
+		if !stringInSlice(order[1], []string{"asc", "desc"}) {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid second order param. 'asc' or 'desc'"})
+		}
+		database.DB.Model((&clip)).Where(&clip).Order(strings.Join(order, " ")).Find(&clips)
+	} else {
+		database.DB.Model((&clip)).Where(&clip).Find(&clips)
+	}
 
 	if len(clips) < 1 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No clips found"})
@@ -78,7 +104,7 @@ func CreateClip(c *fiber.Ctx) error {
 	var clip models.Clip
 
 	if err := c.BodyParser(&newClip); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
 	}
 
 	database.DB.Model(&clip).Find(&clip, "uuid = ?", newClip.UUID)
@@ -87,7 +113,7 @@ func CreateClip(c *fiber.Ctx) error {
 	}
 
 	if err := database.DB.Model(&newClip).Create(&newClip).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})

@@ -63,7 +63,7 @@ func CreateCreator(c *fiber.Ctx) error {
 	var creator models.Creator
 
 	if err := c.BodyParser(&newCreator); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
 	}
 
 	database.DB.Model(&creator).Find(&creator, "uuid = ?", newCreator.UUID)
@@ -72,7 +72,7 @@ func CreateCreator(c *fiber.Ctx) error {
 	}
 
 	if err := database.DB.Model(&creator).Create(&newCreator).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
