@@ -22,11 +22,11 @@ type Clip struct {
 	Vod        string    `gorm:"colum:vod" json:"vod"`
 }
 
-func GetAllClips(c *[]Clip, o string) (err error) {
+func GetAllClips(c *[]Clip, query Clip, o string) (err error) {
 	if o == "" {
 		o = "date desc"
 	}
-	result := database.DB.Order(o).Find(c)
+	result := database.DB.Where(query).Order(o).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}

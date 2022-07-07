@@ -27,16 +27,15 @@ import (
 // @Param size query int false "The size of a vod"
 // @Param order query string false "Set order direction divided by comma. Possible ordering values: 'date', 'duration', 'size'. Possible directions: 'asc', 'desc'. Example: 'date,desc'"
 func GetVods(c *fiber.Ctx) error {
-	var vod models.Vod
 	var vods []models.Vod
+	var query models.Vod
 
-	if err := c.QueryParser(&vod); err != nil {
+	if err := c.QueryParser(&query); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	orderParams := ""
-
 	// custom ordering query
+	orderParams := ""
 	if orderParams = c.Query("order"); orderParams != "" {
 		order := strings.Split(orderParams, ",")
 		if len(order) != 2 {
@@ -51,7 +50,7 @@ func GetVods(c *fiber.Ctx) error {
 		orderParams = strings.Replace(orderParams, ",", " ", -1)
 	}
 
-	if err := models.GetAllVods(&vods, orderParams); err != nil {
+	if err := models.GetAllVods(&vods, query, orderParams); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No vods found"})
 	}
 

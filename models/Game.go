@@ -13,8 +13,8 @@ type Game struct {
 	Clips  []Clip `gorm:"foreignKey:Game;association_foreignkey=UUID" json:"-"`
 }
 
-func GetAllGames(g *[]Game) (err error) {
-	result := database.DB.Find(g)
+func GetAllGames(g *[]Game, query Game) (err error) {
+	result := database.DB.Where(query).Find(g)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}

@@ -12,8 +12,8 @@ type Creator struct {
 	Clips []Clip `gorm:"foreignKey:Creator;association_foreignkey=UUID" json:"clips,omitempty"`
 }
 
-func GetAllCreators(c *[]Creator) (err error) {
-	result := database.DB.Find(c)
+func GetAllCreators(c *[]Creator, query Creator) (err error) {
+	result := database.DB.Where(query).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}

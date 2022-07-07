@@ -20,14 +20,14 @@ import (
 // @Param uuid query int false "The uuid of a creator"
 // @Param name query string false "The name of a creator"
 func GetCreators(c *fiber.Ctx) error {
-	var creator models.Creator
 	var creators []models.Creator
+	var query models.Creator
 
-	if err := c.QueryParser(&creator); err != nil {
+	if err := c.QueryParser(&query); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	if err := models.GetAllCreators(&creators); err != nil {
+	if err := models.GetAllCreators(&creators, query); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No creators found"})
 	}
 

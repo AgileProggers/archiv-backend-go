@@ -39,16 +39,15 @@ func stringInSlice(a string, list []string) bool {
 // @Param vod query string false "The vod id of a clip"
 // @Param order query string false "Set order direction divided by comma. Possible ordering values: 'date', 'duration', 'size'. Possible directions: 'asc', 'desc'. Example: 'date,desc'"
 func GetClips(c *fiber.Ctx) error {
-	var clip models.Clip
 	var clips []models.Clip
+	var query models.Clip
 
-	if err := c.QueryParser(&clip); err != nil {
+	if err := c.QueryParser(&query); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	orderParams := ""
-
 	// custom ordering query
+	orderParams := ""
 	if orderParams = c.Query("order"); orderParams != "" {
 		order := strings.Split(orderParams, ",")
 		if len(order) != 2 {
@@ -63,7 +62,7 @@ func GetClips(c *fiber.Ctx) error {
 		orderParams = strings.Replace(orderParams, ",", " ", -1)
 	}
 
-	if err := models.GetAllClips(&clips, orderParams); err != nil {
+	if err := models.GetAllClips(&clips, query, orderParams); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No clips found"})
 	}
 

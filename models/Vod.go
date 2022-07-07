@@ -20,11 +20,11 @@ type Vod struct {
 	Clips      []Clip    `gorm:"foreignKey:Vod;association_foreignkey=UUID" json:"clips"`
 }
 
-func GetAllVods(v *[]Vod, o string) (err error) {
+func GetAllVods(v *[]Vod, query Vod, o string) (err error) {
 	if o == "" {
 		o = "date desc"
 	}
-	result := database.DB.Where("publish = ?", true).Order(o).Preload("Clips").Find(v)
+	result := database.DB.Where(query).Where("publish = ?", true).Order(o).Preload("Clips").Find(v)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}

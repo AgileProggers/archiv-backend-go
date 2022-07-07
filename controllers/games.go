@@ -21,14 +21,14 @@ import (
 // @Param name query string false "The name of a game"
 // @Param box_art query string false "The box_art of a game"
 func GetGames(c *fiber.Ctx) error {
-	var game models.Game
 	var games []models.Game
+	var query models.Game
 
-	if err := c.QueryParser(&game); err != nil {
+	if err := c.QueryParser(&query); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	if err := models.GetAllGames(&games); err != nil {
+	if err := models.GetAllGames(&games, query); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No games found"})
 	}
 
