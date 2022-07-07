@@ -94,9 +94,9 @@ func GetClipByUUID(c *fiber.Ctx) error {
 // @Produce json
 // @Success 201 {string} string
 // @Failure 400 {string} string
-// @Failure 500 {string} string
+// @Failure 422 {string} string
 // @Router /clips/ [post]
-// @Param Body body models.Clip true "Clip dict"
+// @Param Body body models.Clip true "Clip obj"
 func CreateClip(c *fiber.Ctx) error {
 	var newClip models.Clip
 	var clip models.Clip
@@ -110,8 +110,34 @@ func CreateClip(c *fiber.Ctx) error {
 	}
 
 	if err := models.AddNewClip(&newClip); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
+}
+
+// PatchClip godoc
+// @Summary Patch clip
+// @Tags Clips
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 422 {string} string
+// @Router /clips/{uuid} [patch]
+// @Param uuid path string true "Unique Identifier"
+// @Param Body body models.Clip true "Clip obj"
+func PatchClip(c *fiber.Ctx) error {
+	var newClip models.Clip
+	uuid := c.Params("uuid")
+
+	if err := c.BodyParser(&newClip); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect patch body"})
+	}
+
+	if err := models.PatchClip(&newClip, uuid); err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while patching the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }

@@ -36,8 +36,14 @@ func GetOneGame(g *Game, uuid int) (err error) {
 	return nil
 }
 
-func PutOneGame(g *Game) (err error) {
-	database.DB.Save(g)
+func PatchGame(g *Game, uuid int) (err error) {
+	var game Game
+	if err := GetOneGame(&game, uuid); err != nil {
+		return errors.New("game not found")
+	}
+	if err := database.DB.Where("uuid = ?", uuid).Updates(g).Error; err != nil {
+		return errors.New("update failed")
+	}
 	return nil
 }
 

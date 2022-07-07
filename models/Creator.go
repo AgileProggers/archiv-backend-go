@@ -35,8 +35,14 @@ func GetOneCreator(c *Creator, uuid int) (err error) {
 	return nil
 }
 
-func PutOneCreator(c *Creator) (err error) {
-	database.DB.Save(c)
+func PatchCreator(c *Creator, uuid int) (err error) {
+	var creator Creator
+	if err := GetOneCreator(&creator, uuid); err != nil {
+		return errors.New("creator not found")
+	}
+	if err := database.DB.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
+		return errors.New("update failed")
+	}
 	return nil
 }
 

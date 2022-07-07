@@ -62,8 +62,14 @@ func GetOneClip(c *Clip, uuid string) (err error) {
 	return nil
 }
 
-func PutOneClip(c *Clip) (err error) {
-	database.DB.Save(c)
+func PatchClip(c *Clip, uuid string) (err error) {
+	var clip Clip
+	if err := GetOneClip(&clip, uuid); err != nil {
+		return errors.New("clip not found")
+	}
+	if err := database.DB.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
+		return errors.New("update failed")
+	}
 	return nil
 }
 

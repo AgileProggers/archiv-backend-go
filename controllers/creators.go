@@ -65,9 +65,9 @@ func GetCreatorByUUID(c *fiber.Ctx) error {
 // @Produce json
 // @Success 201 {string} string
 // @Failure 400 {string} string
-// @Failure 500 {string} string
+// @Failure 422 {string} string
 // @Router /creators/ [post]
-// @Param Body body models.Creator true "Creator dict"
+// @Param Body body models.Creator true "Creator obj"
 func CreateCreator(c *fiber.Ctx) error {
 	var newCreator models.Creator
 	var creator models.Creator
@@ -81,8 +81,38 @@ func CreateCreator(c *fiber.Ctx) error {
 	}
 
 	if err := models.AddNewCreator(&newCreator); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
+}
+
+// PatchCreator godoc
+// @Summary Patch creator
+// @Tags Creators
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 422 {string} string
+// @Router /creators/{uuid} [patch]
+// @Param uuid path int true "Unique Identifier"
+// @Param Body body models.Creator true "Creator obj"
+func PatchCreator(c *fiber.Ctx) error {
+	var newCreator models.Creator
+	uuid, err := strconv.Atoi(c.Params("uuid"))
+
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "UUID is not a number"})
+	}
+
+	if err := c.BodyParser(&newCreator); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect patch body"})
+	}
+
+	if err := models.PatchCreator(&newCreator, uuid); err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while patching the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }

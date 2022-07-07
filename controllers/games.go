@@ -64,11 +64,11 @@ func GetGameByUUID(c *fiber.Ctx) error {
 // @Tags Games
 // @Accept json
 // @Produce json
-// @Success 200 {string} string
+// @Success 201 {string} string
 // @Failure 400 {string} string
-// @Failure 500 {string} string
+// @Failure 422 {string} string
 // @Router /games/ [post]
-// @Param Body body models.Game true "Game dict"
+// @Param Body body models.Game true "Game obj"
 func CreateGame(c *fiber.Ctx) error {
 	var newGame models.Game
 	var game models.Game
@@ -82,8 +82,38 @@ func CreateGame(c *fiber.Ctx) error {
 	}
 
 	if err := models.AddNewGame(&newGame); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
+}
+
+// PatchGame godoc
+// @Summary Patch game
+// @Tags Games
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 422 {string} string
+// @Router /games/{uuid} [patch]
+// @Param uuid path int true "Unique Identifier"
+// @Param Body body models.Game true "Game obj"
+func PatchGame(c *fiber.Ctx) error {
+	var newGame models.Game
+	uuid, err := strconv.Atoi(c.Params("uuid"))
+
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "UUID is not a number"})
+	}
+
+	if err := c.BodyParser(&newGame); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect patch body"})
+	}
+
+	if err := models.PatchGame(&newGame, uuid); err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while patching the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }

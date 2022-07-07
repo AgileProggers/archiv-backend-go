@@ -43,24 +43,28 @@ func main() {
 			vodsGroup.Get("/", controllers.GetVods)
 			vodsGroup.Post("/", controllers.CreateVod)
 			vodsGroup.Get("/:uuid", controllers.GetVodByUUID)
+			vodsGroup.Patch("/:uuid", controllers.PatchVod)
 		}
 		clipsGroup := v1.Group("/clips")
 		{
 			clipsGroup.Get("/", controllers.GetClips)
 			clipsGroup.Post("/", controllers.CreateClip)
 			clipsGroup.Get("/:uuid", controllers.GetClipByUUID)
+			clipsGroup.Patch("/:uuid", controllers.PatchClip)
 		}
 		gamesGroup := v1.Group("/games")
 		{
 			gamesGroup.Get("/", controllers.GetGames)
 			gamesGroup.Post("/", controllers.CreateGame)
 			gamesGroup.Get("/:uuid", controllers.GetGameByUUID)
+			gamesGroup.Patch("/:uuid", controllers.PatchGame)
 		}
 		creatorsGroup := v1.Group("/creators")
 		{
 			creatorsGroup.Get("/", controllers.GetCreators)
 			creatorsGroup.Post("/", controllers.CreateCreator)
 			creatorsGroup.Get("/:uuid", controllers.GetCreatorByUUID)
+			creatorsGroup.Patch("/:uuid", controllers.PatchCreator)
 		}
 		yearsGroup := v1.Group("/years")
 		{

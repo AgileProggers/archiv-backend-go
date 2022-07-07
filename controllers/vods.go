@@ -80,11 +80,11 @@ func GetVodByUUID(c *fiber.Ctx) error {
 // @Tags Vods
 // @Accept json
 // @Produce json
-// @Success 200 {string} string
+// @Success 201 {string} string
 // @Failure 400 {string} string
-// @Failure 500 {string} string
+// @Failure 422 {string} string
 // @Router /vods/ [post]
-// @Param Body body models.Vod true "Vod dict"
+// @Param Body body models.Vod true "Vod obj"
 func CreateVod(c *fiber.Ctx) error {
 	var newVod models.Vod
 	var vod models.Vod
@@ -98,8 +98,34 @@ func CreateVod(c *fiber.Ctx) error {
 	}
 
 	if err := models.AddNewVod(&newVod); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
+}
+
+// PatchVod godoc
+// @Summary Patch vod
+// @Tags Vods
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 422 {string} string
+// @Router /vods/{uuid} [patch]
+// @Param uuid path string true "Unique Identifier"
+// @Param Body body models.Vod true "Vod obj"
+func PatchVod(c *fiber.Ctx) error {
+	var newVod models.Vod
+	uuid := c.Params("uuid")
+
+	if err := c.BodyParser(&newVod); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect patch body"})
+	}
+
+	if err := models.PatchVod(&newVod, uuid); err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"message": "Error while patching the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }

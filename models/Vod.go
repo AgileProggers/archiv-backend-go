@@ -46,8 +46,14 @@ func GetOneVod(v *Vod, uuid string) (err error) {
 	return nil
 }
 
-func PutOneVod(v *Vod) (err error) {
-	database.DB.Save(v)
+func PatchVod(v *Vod, uuid string) (err error) {
+	var vod Vod
+	if err := GetOneVod(&vod, uuid); err != nil {
+		return errors.New("vod not found")
+	}
+	if err := database.DB.Where("uuid = ?", uuid).Updates(v).Error; err != nil {
+		return errors.New("update failed")
+	}
 	return nil
 }
 

@@ -158,6 +158,10 @@ paths:
             items:
               $ref: '#/definitions/models.Clip'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
         "404":
           description: Not Found
           schema:
@@ -169,7 +173,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Clip dict
+      - description: Clip obj
         in: body
         name: Body
         required: true
@@ -178,12 +182,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             type: string
         "400":
           description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
           schema:
             type: string
       summary: Create clip
@@ -211,6 +219,39 @@ paths:
       summary: Get clips by uuid
       tags:
       - Clips
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: Clip obj
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Clip'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      summary: Patch clip
+      tags:
+      - Clips
   /creators/:
     get:
       consumes:
@@ -233,6 +274,10 @@ paths:
             items:
               $ref: '#/definitions/models.Creator'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
         "404":
           description: Not Found
           schema:
@@ -244,7 +289,66 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Creator dict
+      - description: Creator obj
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Creator'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      summary: Create creator
+      tags:
+      - Creators
+  /creators/{uuid}:
+    get:
+      parameters:
+      - description: Unique Identifyer
+        in: path
+        name: uuid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Creator'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get creator by uuid
+      tags:
+      - Creators
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: integer
+      - description: Creator obj
         in: body
         name: Body
         required: true
@@ -261,29 +365,11 @@ paths:
           description: Bad Request
           schema:
             type: string
-      summary: Create creator
-      tags:
-      - Creators
-  /creators/{uuid}:
-    get:
-      parameters:
-      - description: Unique Identifyer
-        in: path
-        name: uuid
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Creator'
-        "404":
-          description: Not Found
+        "422":
+          description: Unprocessable Entity
           schema:
             type: string
-      summary: Get creator by uuid
+      summary: Patch creator
       tags:
       - Creators
   /games/:
@@ -312,6 +398,10 @@ paths:
             items:
               $ref: '#/definitions/models.Game'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
         "404":
           description: Not Found
           schema:
@@ -323,7 +413,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Game dict
+      - description: Game obj
         in: body
         name: Body
         required: true
@@ -332,12 +422,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             type: string
         "400":
           description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
           schema:
             type: string
       summary: Create game
@@ -358,11 +452,48 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Game'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
         "404":
           description: Not Found
           schema:
             type: string
       summary: Get game by uuid
+      tags:
+      - Games
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: integer
+      - description: Game obj
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Game'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      summary: Patch game
       tags:
       - Games
   /vods/:
@@ -417,6 +548,10 @@ paths:
             items:
               $ref: '#/definitions/models.Vod'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
         "404":
           description: Not Found
           schema:
@@ -428,7 +563,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Vod dict
+      - description: Vod obj
         in: body
         name: Body
         required: true
@@ -437,12 +572,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             type: string
         "400":
           description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
           schema:
             type: string
       summary: Create vod
@@ -468,6 +607,39 @@ paths:
           schema:
             type: string
       summary: Get vod by uuid
+      tags:
+      - Vods
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: Vod obj
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Vod'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      summary: Patch vod
       tags:
       - Vods
 swagger: "2.0"
