@@ -116,3 +116,32 @@ func PatchCreator(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }
+
+// DeleteCreator godoc
+// @Summary Delete creator
+// @Tags Creators
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /creators/{uuid} [delete]
+// @Param uuid path string true "Unique Identifier"
+func DeleteCreator(c *fiber.Ctx) error {
+	var creator models.Creator
+	uuid, err := strconv.Atoi(c.Params("uuid"))
+
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "UUID is not a number"})
+	}
+
+	if err := models.GetOneCreator(&creator, uuid); err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Creator not found"})
+	}
+
+	if err := models.DeleteCreator(&creator, uuid); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Error while deleting the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Deleted"})
+}

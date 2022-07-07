@@ -198,6 +198,33 @@ paths:
       tags:
       - Clips
   /clips/{uuid}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete clip
+      tags:
+      - Clips
     get:
       parameters:
       - description: Unique Identifier
@@ -314,6 +341,33 @@ paths:
       tags:
       - Creators
   /creators/{uuid}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete creator
+      tags:
+      - Creators
     get:
       parameters:
       - description: Unique Identifyer
@@ -438,6 +492,33 @@ paths:
       tags:
       - Games
   /games/{uuid}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete game
+      tags:
+      - Games
     get:
       parameters:
       - description: Unique Identifier
@@ -588,6 +669,33 @@ paths:
       tags:
       - Vods
   /vods/{uuid}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unique Identifier
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete vod
+      tags:
+      - Vods
     get:
       parameters:
       - description: Unique Identifier

@@ -9,7 +9,7 @@ import (
 type Creator struct {
 	UUID  int    `gorm:"primaryKey;uniqueIndex;not null" json:"uuid"`
 	Name  string `gorm:"not null" json:"name" binding:"required"`
-	Clips []Clip `gorm:"foreignKey:Creator;association_foreignkey=UUID" json:"clips,omitempty"`
+	Clips []Clip `gorm:"foreignKey:Creator;association_foreignkey=UUID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"clips,omitempty"`
 }
 
 func GetAllCreators(c *[]Creator, query Creator) (err error) {

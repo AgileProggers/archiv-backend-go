@@ -17,7 +17,7 @@ type Vod struct {
 	Fps        float32   `gorm:"not null" json:"fps" binding:"required"`
 	Size       int       `gorm:"not null" json:"size" binding:"required"`
 	Publish    bool      `gorm:"not null" json:"publish" binding:"required"`
-	Clips      []Clip    `gorm:"foreignKey:Vod;association_foreignkey=UUID" json:"clips"`
+	Clips      []Clip    `gorm:"foreignKey:Vod;association_foreignkey=UUID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"clips"`
 }
 
 func GetAllVods(v *[]Vod, query Vod, o string) (err error) {

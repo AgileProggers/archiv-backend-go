@@ -129,3 +129,28 @@ func PatchVod(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }
+
+// DeleteVod godoc
+// @Summary Delete vod
+// @Tags Vods
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /vods/{uuid} [delete]
+// @Param uuid path string true "Unique Identifier"
+func DeleteVod(c *fiber.Ctx) error {
+	var vod models.Vod
+	uuid := c.Params("uuid")
+
+	if err := models.GetOneVod(&vod, uuid); err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Vod not found"})
+	}
+
+	if err := models.DeleteVod(&vod, uuid); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Error while deleting the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Deleted"})
+}

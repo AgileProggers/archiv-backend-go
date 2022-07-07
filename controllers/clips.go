@@ -141,3 +141,28 @@ func PatchClip(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }
+
+// DeleteClip godoc
+// @Summary Delete clip
+// @Tags Clips
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /clips/{uuid} [delete]
+// @Param uuid path string true "Unique Identifier"
+func DeleteClip(c *fiber.Ctx) error {
+	var clip models.Clip
+	uuid := c.Params("uuid")
+
+	if err := models.GetOneClip(&clip, uuid); err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Clip not found"})
+	}
+
+	if err := models.DeleteClip(&clip, uuid); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Error while deleting the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Deleted"})
+}

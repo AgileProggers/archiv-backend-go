@@ -117,3 +117,32 @@ func PatchGame(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Updated"})
 }
+
+// DeleteGame godoc
+// @Summary Delete game
+// @Tags Games
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /games/{uuid} [delete]
+// @Param uuid path string true "Unique Identifier"
+func DeleteGame(c *fiber.Ctx) error {
+	var game models.Game
+	uuid, err := strconv.Atoi(c.Params("uuid"))
+
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "UUID is not a number"})
+	}
+
+	if err := models.GetOneGame(&game, uuid); err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Game not found"})
+	}
+
+	if err := models.DeleteGame(&game, uuid); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Error while deleting the model"})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Deleted"})
+}
