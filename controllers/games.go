@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
-	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,6 +14,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.Game
+// @Failure 400 {string} string
 // @Failure 404 {string} string
 // @Router /games/ [get]
 // @Param uuid query int false "The uuid of a game"
@@ -27,9 +28,7 @@ func GetGames(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	result := database.DB.Model((&game)).Where(&game).Find(&games)
-
-	if result.RowsAffected < 1 {
+	if err := models.GetAllGames(&games); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No games found"})
 	}
 
@@ -41,20 +40,23 @@ func GetGames(c *fiber.Ctx) error {
 // @Tags Games
 // @Produce json
 // @Success 200 {object} models.Game
+// @Failure 400 {string} string
 // @Failure 404 {string} string
 // @Router /games/{uuid} [get]
 // @Param uuid path string true "Unique Identifier"
 func GetGameByUUID(c *fiber.Ctx) error {
-	game := new(models.Game)
-	var g models.Game
+	var game models.Game
+	uuid, err := strconv.Atoi(c.Params("uuid"))
 
-	result := database.DB.Model((&game)).Find(&g, "uuid = ?", c.Params("uuid"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "UUID is not a number"})
+	}
 
-	if result.RowsAffected < 1 {
+	if err := models.GetOneGame(&game, uuid); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Game not found"})
 	}
 
-	return c.Status(http.StatusOK).JSON(g)
+	return c.Status(http.StatusOK).JSON(game)
 }
 
 // CreateGame godoc
@@ -64,6 +66,7 @@ func GetGameByUUID(c *fiber.Ctx) error {
 // @Produce json
 // @Success 200 {string} string
 // @Failure 400 {string} string
+// @Failure 500 {string} string
 // @Router /games/ [post]
 // @Param Body body models.Game true "Game dict"
 func CreateGame(c *fiber.Ctx) error {
@@ -71,17 +74,16 @@ func CreateGame(c *fiber.Ctx) error {
 	var game models.Game
 
 	if err := c.BodyParser(&newGame); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect post body"})
 	}
 
-	database.DB.Model(&game).Find(&game, "uuid = ?", newGame.UUID)
-	if game.UUID > 0 {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Game already exists. Use PATCH to modify existing games."})
+	if err := models.GetOneGame(&game, newGame.UUID); err == nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Game already exists"})
 	}
 
-	if err := database.DB.Model(&game).Create(&newGame).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
+	if err := models.AddNewGame(&newGame); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
 }

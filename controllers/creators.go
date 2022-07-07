@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
-	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,6 +14,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.Creator
+// @Failure 400 {string} string
 // @Failure 404 {string} string
 // @Router /creators/ [get]
 // @Param uuid query int false "The uuid of a creator"
@@ -26,9 +27,7 @@ func GetCreators(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
-	result := database.DB.Model((&creator)).Where(&creator).Find(&creators)
-
-	if result.RowsAffected < 1 {
+	if err := models.GetAllCreators(&creators); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No creators found"})
 	}
 
@@ -40,20 +39,23 @@ func GetCreators(c *fiber.Ctx) error {
 // @Tags Creators
 // @Produce json
 // @Success 200 {object} models.Creator
+// @Failure 400 {string} string
 // @Failure 404 {string} string
 // @Router /creators/{uuid} [get]
-// @Param uuid path string true "Unique Identifyer"
+// @Param uuid path int true "Unique Identifyer"
 func GetCreatorByUUID(c *fiber.Ctx) error {
-	var creators []models.Creator
-	var cr models.Creator
+	var creator models.Creator
+	uuid, err := strconv.Atoi(c.Params("uuid"))
 
-	result := database.DB.Model((&creators)).Preload("Clips").Find(&cr, "uuid = ?", c.Params("uuid"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "UUID is not a number"})
+	}
 
-	if result.RowsAffected < 1 {
+	if err := models.GetOneCreator(&creator, uuid); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Creator not found"})
 	}
 
-	return c.Status(http.StatusOK).JSON(cr)
+	return c.Status(http.StatusOK).JSON(creator)
 }
 
 // CreateCreator godoc
@@ -61,8 +63,9 @@ func GetCreatorByUUID(c *fiber.Ctx) error {
 // @Tags Creators
 // @Accept json
 // @Produce json
-// @Success 200 {string} string
+// @Success 201 {string} string
 // @Failure 400 {string} string
+// @Failure 500 {string} string
 // @Router /creators/ [post]
 // @Param Body body models.Creator true "Creator dict"
 func CreateCreator(c *fiber.Ctx) error {
@@ -70,17 +73,16 @@ func CreateCreator(c *fiber.Ctx) error {
 	var creator models.Creator
 
 	if err := c.BodyParser(&newCreator); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect post body"})
 	}
 
-	database.DB.Model(&creator).Find(&creator, "uuid = ?", newCreator.UUID)
-	if creator.UUID > 0 {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Creator already exists. Use PATCH to modify existing creators."})
+	if err := models.GetOneCreator(&creator, newCreator.UUID); err == nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Creator already exists"})
 	}
 
-	if err := database.DB.Model(&creator).Create(&newCreator).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
+	if err := models.AddNewCreator(&newCreator); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
 }

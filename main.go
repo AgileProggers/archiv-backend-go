@@ -6,6 +6,9 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/controllers"
 	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/docs"
+	"github.com/AgileProggers/archiv-backend-go/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
@@ -13,9 +16,26 @@ import (
 )
 
 func main() {
+	// Create fiber
 	app := fiber.New()
-	database.ConnectDatabase()
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "Archiv API Metrics Page"}))
+
+	// Connect DB
+	dsn := "host=localhost user=test password=test dbname=test port=5432 sslmode=disable TimeZone=Europe/Berlin"
+	db, dbErr := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if dbErr != nil {
+		panic("failed to connect database")
+	}
+	db.AutoMigrate(&models.Vod{}, &models.Game{}, &models.Creator{}, &models.Clip{})
+	database.DB = db
+
+	// Create swagger
 	docs.SwaggerInfo.BasePath = "/api/v1"
+	app.Get("/swagger/*", swagger.New(swagger.Config{
+		DefaultModelsExpandDepth: -1,
+	}))
+
+	// Create routes
 	v1 := app.Group("/api/v1")
 	{
 		vodsGroup := v1.Group("/vods")
@@ -28,7 +48,7 @@ func main() {
 		{
 			clipsGroup.Get("/", controllers.GetClips)
 			clipsGroup.Post("/", controllers.CreateClip)
-			clipsGroup.Get("/:uuid", controllers.GetClipsByUUID)
+			clipsGroup.Get("/:uuid", controllers.GetClipByUUID)
 		}
 		gamesGroup := v1.Group("/games")
 		{
@@ -42,12 +62,13 @@ func main() {
 			creatorsGroup.Post("/", controllers.CreateCreator)
 			creatorsGroup.Get("/:uuid", controllers.GetCreatorByUUID)
 		}
+		yearsGroup := v1.Group("/years")
+		{
+			yearsGroup.Get("/", controllers.GetYears)
+		}
 	}
-	v1.Get("/years", controllers.GetYears)
-	app.Get("/swagger/*", swagger.New(swagger.Config{
-		DefaultModelsExpandDepth: -1,
-	}))
-	app.Get("/metrics", monitor.New(monitor.Config{Title: "Archiv API Metrics Page"}))
+
+	// Run
 	err := app.Listen(":8080")
 	if err != nil {
 		log.Fatalf("fiber.Listen failed %s", err)

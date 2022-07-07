@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,6 +14,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.Vod
+// @Failure 400 {string} string
 // @Failure 404 {string} string
 // @Router /vods/ [get]
 // @Param uuid query string false "The uuid of a vod"
@@ -31,11 +31,13 @@ func GetVods(c *fiber.Ctx) error {
 	var vods []models.Vod
 
 	if err := c.QueryParser(&vod); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "invalid params"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
+	orderParams := ""
+
 	// custom ordering query
-	if orderParams := c.Query("order"); orderParams != "" {
+	if orderParams = c.Query("order"); orderParams != "" {
 		order := strings.Split(orderParams, ",")
 		if len(order) != 2 {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid order params. Example: 'date,desc'"})
@@ -46,13 +48,10 @@ func GetVods(c *fiber.Ctx) error {
 		if !stringInSlice(order[1], []string{"asc", "desc"}) {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid second order param. 'asc' or 'desc'"})
 		}
-		database.DB.Model((&vod)).Where(&vod).Where("publish = ?", true).Order(strings.Join(order, " ")).Preload("Clips").Find(&vods)
-
-	} else {
-		database.DB.Model((&vod)).Where(&vod).Where("publish = ?", true).Order("date desc").Preload("Clips").Find(&vods)
+		orderParams = strings.Replace(orderParams, ",", " ", -1)
 	}
 
-	if len(vods) < 1 {
+	if err := models.GetAllVods(&vods, orderParams); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No vods found"})
 	}
 
@@ -70,9 +69,7 @@ func GetVods(c *fiber.Ctx) error {
 func GetVodByUUID(c *fiber.Ctx) error {
 	var vod models.Vod
 
-	database.DB.Model((&vod)).Where("publish = ?", true).Where("uuid = ?", c.Params("uuid")).Preload("Clips").Find(&vod)
-
-	if vod.UUID == "" {
+	if err := models.GetOneVod(&vod, c.Params("uuid")); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Vod not found"})
 	}
 
@@ -86,6 +83,7 @@ func GetVodByUUID(c *fiber.Ctx) error {
 // @Produce json
 // @Success 200 {string} string
 // @Failure 400 {string} string
+// @Failure 500 {string} string
 // @Router /vods/ [post]
 // @Param Body body models.Vod true "Vod dict"
 func CreateVod(c *fiber.Ctx) error {
@@ -93,17 +91,16 @@ func CreateVod(c *fiber.Ctx) error {
 	var vod models.Vod
 
 	if err := c.BodyParser(&newVod); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect post body"})
 	}
 
-	database.DB.Model(&vod).Find(&vod, "uuid = ?", newVod.UUID)
-	if vod.UUID != "" {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Vod already exists. Use PATCH to modify existing vods."})
+	if err := models.GetOneVod(&vod, newVod.UUID); err == nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Vod already exists"})
 	}
 
-	if err := database.DB.Model(&vod).Create(&newVod).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
+	if err := models.AddNewVod(&newVod); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
 }

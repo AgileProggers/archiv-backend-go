@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AgileProggers/archiv-backend-go/database"
 	"github.com/AgileProggers/archiv-backend-go/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,6 +23,7 @@ func stringInSlice(a string, list []string) bool {
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.Clip
+// @Failure 400 {string} string
 // @Failure 404 {string} string
 // @Router /clips/ [get]
 // @Param uuid query string false "The uuid of a clip"
@@ -46,8 +46,10 @@ func GetClips(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid params"})
 	}
 
+	orderParams := ""
+
 	// custom ordering query
-	if orderParams := c.Query("order"); orderParams != "" {
+	if orderParams = c.Query("order"); orderParams != "" {
 		order := strings.Split(orderParams, ",")
 		if len(order) != 2 {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid order params. Example: 'date,desc'"})
@@ -58,19 +60,17 @@ func GetClips(c *fiber.Ctx) error {
 		if !stringInSlice(order[1], []string{"asc", "desc"}) {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Invalid second order param. 'asc' or 'desc'"})
 		}
-		database.DB.Model((&clip)).Where(&clip).Order(strings.Join(order, " ")).Find(&clips)
-	} else {
-		database.DB.Model((&clip)).Where(&clip).Find(&clips)
+		orderParams = strings.Replace(orderParams, ",", " ", -1)
 	}
 
-	if len(clips) < 1 {
+	if err := models.GetAllClips(&clips, orderParams); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "No clips found"})
 	}
 
 	return c.Status(http.StatusOK).JSON(clips)
 }
 
-// GetClipsByID godoc
+// GetClipByID godoc
 // @Summary Get clips by uuid
 // @Tags Clips
 // @Produce json
@@ -78,12 +78,10 @@ func GetClips(c *fiber.Ctx) error {
 // @Failure 404 {string} string
 // @Router /clips/{uuid} [get]
 // @Param uuid path string true "Unique Identifier"
-func GetClipsByUUID(c *fiber.Ctx) error {
+func GetClipByUUID(c *fiber.Ctx) error {
 	var clip models.Clip
 
-	result := database.DB.Model((&clip)).Find(&clip, "uuid = ?", c.Params("uuid"))
-
-	if result.RowsAffected < 1 {
+	if err := models.GetOneClip(&clip, c.Params("uuid")); err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"message": "Clip not found"})
 	}
 
@@ -95,8 +93,9 @@ func GetClipsByUUID(c *fiber.Ctx) error {
 // @Tags Clips
 // @Accept json
 // @Produce json
-// @Success 200 {string} string
+// @Success 201 {string} string
 // @Failure 400 {string} string
+// @Failure 500 {string} string
 // @Router /clips/ [post]
 // @Param Body body models.Clip true "Clip dict"
 func CreateClip(c *fiber.Ctx) error {
@@ -104,30 +103,16 @@ func CreateClip(c *fiber.Ctx) error {
 	var clip models.Clip
 
 	if err := c.BodyParser(&newClip); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while parsing the body"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Incorrect post body"})
 	}
 
-	database.DB.Model(&clip).Find(&clip, "uuid = ?", newClip.UUID)
-	if clip.UUID != "" {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Clip already exists. Use PATCH to modify existing clips."})
+	if err := models.GetOneClip(&clip, newClip.UUID); err == nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "Clip already exists"})
 	}
 
-	query := database.DB.Model(&newClip)
-	omits := []string{}
-
-	if newClip.Creator == 0 {
-		omits = append(omits, "Creator")
-	}
-	if newClip.Game == 0 {
-		omits = append(omits, "Game")
-	}
-	if newClip.Vod == "" {
-		omits = append(omits, "Vod")
+	if err := models.AddNewClip(&newClip); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"message": "Error while creating the model"})
 	}
 
-	if err := query.Omit(strings.Join(omits, ",")).Create(&newClip).Error; err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "error while creating the model"})
-	}
-
-	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "created"})
+	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "Created"})
 }

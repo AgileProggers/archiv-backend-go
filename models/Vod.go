@@ -1,7 +1,10 @@
 package models
 
 import (
+	"errors"
 	"time"
+
+	"github.com/AgileProggers/archiv-backend-go/database"
 )
 
 type Vod struct {
@@ -15,4 +18,40 @@ type Vod struct {
 	Size       int       `gorm:"not null" json:"size" binding:"required"`
 	Publish    bool      `gorm:"not null" json:"publish" binding:"required"`
 	Clips      []Clip    `gorm:"foreignKey:Vod;association_foreignkey=UUID" json:"clips"`
+}
+
+func GetAllVods(v *[]Vod, o string) (err error) {
+	if o == "" {
+		o = "date desc"
+	}
+	result := database.DB.Where("publish = ?", true).Order(o).Preload("Clips").Find(v)
+	if result.RowsAffected == 0 {
+		return errors.New("not found")
+	}
+	return nil
+}
+
+func AddNewVod(v *Vod) (err error) {
+	if err = database.DB.Create(v).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetOneVod(v *Vod, uuid string) (err error) {
+	result := database.DB.Where("uuid = ?", uuid).Where("publish = ?", true).Preload("Clips").Find(v)
+	if result.RowsAffected == 0 {
+		return errors.New("not found")
+	}
+	return nil
+}
+
+func PutOneVod(v *Vod) (err error) {
+	database.DB.Save(v)
+	return nil
+}
+
+func DeleteVod(v *Vod, uuid string) (err error) {
+	database.DB.Where("uuid = ?", uuid).Delete(v)
+	return nil
 }
