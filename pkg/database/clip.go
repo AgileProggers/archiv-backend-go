@@ -1,11 +1,9 @@
-package models
+package database
 
 import (
 	"errors"
 	"strings"
 	"time"
-
-	"github.com/AgileProggers/archiv-backend-go/database"
 )
 
 type Clip struct {
@@ -26,7 +24,7 @@ func GetAllClips(c *[]Clip, query Clip, o string) (err error) {
 	if o == "" {
 		o = "date desc"
 	}
-	result := database.DB.Where(query).Order(o).Find(c)
+	result := database.Where(query).Order(o).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
@@ -37,7 +35,7 @@ func AddNewClip(c *Clip) (err error) {
 	var creator Creator
 	var game Game
 	var vod Vod
-	omits := []string{}
+	var omits []string
 
 	if err := GetOneCreator(&creator, c.Creator); err != nil {
 		omits = append(omits, "Creator")
@@ -48,14 +46,14 @@ func AddNewClip(c *Clip) (err error) {
 	if err := GetOneVod(&vod, c.Vod); err != nil {
 		omits = append(omits, "Vod")
 	}
-	if err = database.DB.Omit(strings.Join(omits, ",")).Create(&c).Error; err != nil {
+	if err = database.Omit(strings.Join(omits, ",")).Create(&c).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func GetOneClip(c *Clip, uuid string) (err error) {
-	result := database.DB.Where("uuid = ?", uuid).Find(c)
+	result := database.Where("uuid = ?", uuid).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
@@ -67,13 +65,13 @@ func PatchClip(c *Clip, uuid string) (err error) {
 	if err := GetOneClip(&clip, uuid); err != nil {
 		return errors.New("clip not found")
 	}
-	if err := database.DB.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
+	if err := database.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
 		return errors.New("update failed")
 	}
 	return nil
 }
 
 func DeleteClip(c *Clip, uuid string) (err error) {
-	database.DB.Where("uuid = ?", uuid).Delete(c)
+	database.Where("uuid = ?", uuid).Delete(c)
 	return nil
 }
