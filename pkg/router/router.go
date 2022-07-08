@@ -17,6 +17,8 @@ func Listen() error {
 	// Create fiber
 	app = there.NewRouter()
 
+	app.Get("/metrics", GetMetrics)
+
 	// Create routes
 	v1 := app.Group("/api/v1")
 
