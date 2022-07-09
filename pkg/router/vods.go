@@ -95,7 +95,7 @@ func CreateVod(request there.HttpRequest) there.HttpResponse {
 	var newVod database.Vod
 	var vod database.Vod
 
-	err := request.Body.BindJson(&vod)
+	err := request.Body.BindJson(&newVod)
 	if err != nil {
 		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
 	}

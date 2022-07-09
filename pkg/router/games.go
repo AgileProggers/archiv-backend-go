@@ -77,7 +77,7 @@ func CreateGame(request there.HttpRequest) there.HttpResponse {
 	var newGame database.Game
 	var game database.Game
 
-	err := request.Body.BindJson(&game)
+	err := request.Body.BindJson(&newGame)
 	if err != nil {
 		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
 	}
