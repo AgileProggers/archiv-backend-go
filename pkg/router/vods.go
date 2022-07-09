@@ -2,9 +2,10 @@ package router
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/AgileProggers/archiv-backend-go/pkg/database"
 	"github.com/Gebes/there/v2"
-	"strings"
 )
 
 // GetVods godoc
@@ -94,7 +95,7 @@ func CreateVod(request there.HttpRequest) there.HttpResponse {
 	var newVod database.Vod
 	var vod database.Vod
 
-	err := request.Body.BindJson(&vod)
+	err := request.Body.BindJson(&newVod)
 	if err != nil {
 		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
 	}
@@ -107,7 +108,7 @@ func CreateVod(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusUnprocessableEntity, "Error while creating the model")
 	}
 
-	return there.Error(there.StatusCreated, "Created")
+	return there.Message(there.StatusCreated, "Created")
 }
 
 // PatchVod godoc
@@ -134,7 +135,7 @@ func PatchVod(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusUnprocessableEntity, "Error while patching the model")
 	}
 
-	return there.Error(there.StatusOK, "Updated")
+	return there.Message(there.StatusOK, "Updated")
 }
 
 // DeleteVod godoc
@@ -160,5 +161,5 @@ func DeleteVod(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusBadRequest, "Error while deleting the model")
 	}
 
-	return there.Error(there.StatusOK, "Deleted")
+	return there.Message(there.StatusOK, "Deleted")
 }

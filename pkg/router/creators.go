@@ -2,9 +2,10 @@ package router
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/AgileProggers/archiv-backend-go/pkg/database"
 	"github.com/Gebes/there/v2"
-	"strconv"
 )
 
 // GetCreators godoc
@@ -89,7 +90,7 @@ func CreateCreator(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusUnprocessableEntity, "Error while creating the model")
 	}
 
-	return there.Error(there.StatusCreated, "Created")
+	return there.Message(there.StatusCreated, "Created")
 }
 
 // PatchCreator godoc
@@ -120,7 +121,7 @@ func PatchCreator(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusUnprocessableEntity, "Error while patching the model")
 	}
 
-	return there.Error(there.StatusOK, "Updated")
+	return there.Message(there.StatusOK, "Updated")
 }
 
 // DeleteCreator godoc
@@ -149,5 +150,5 @@ func DeleteCreator(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusBadRequest, "Error while deleting the model")
 	}
 
-	return there.Error(there.StatusOK, "Deleted")
+	return there.Message(there.StatusOK, "Deleted")
 }
