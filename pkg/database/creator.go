@@ -1,9 +1,7 @@
-package models
+package database
 
 import (
 	"errors"
-
-	"github.com/AgileProggers/archiv-backend-go/database"
 )
 
 type Creator struct {
@@ -13,7 +11,7 @@ type Creator struct {
 }
 
 func GetAllCreators(c *[]Creator, query Creator) (err error) {
-	result := database.DB.Where(query).Find(c)
+	result := database.Where(query).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
@@ -21,14 +19,14 @@ func GetAllCreators(c *[]Creator, query Creator) (err error) {
 }
 
 func AddNewCreator(c *Creator) (err error) {
-	if err = database.DB.Create(c).Error; err != nil {
+	if err = database.Create(c).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func GetOneCreator(c *Creator, uuid int) (err error) {
-	result := database.DB.Where("uuid = ?", uuid).Find(c)
+	result := database.Where("uuid = ?", uuid).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
@@ -40,13 +38,13 @@ func PatchCreator(c *Creator, uuid int) (err error) {
 	if err := GetOneCreator(&creator, uuid); err != nil {
 		return errors.New("creator not found")
 	}
-	if err := database.DB.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
+	if err := database.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
 		return errors.New("update failed")
 	}
 	return nil
 }
 
 func DeleteCreator(c *Creator, uuid int) (err error) {
-	database.DB.Where("uuid = ?", uuid).Delete(c)
+	database.Where("uuid = ?", uuid).Delete(c)
 	return nil
 }

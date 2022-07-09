@@ -1,10 +1,8 @@
-package models
+package database
 
 import (
 	"errors"
 	"time"
-
-	"github.com/AgileProggers/archiv-backend-go/database"
 )
 
 type Vod struct {
@@ -24,7 +22,7 @@ func GetAllVods(v *[]Vod, query Vod, o string) (err error) {
 	if o == "" {
 		o = "date desc"
 	}
-	result := database.DB.Where(query).Where("publish = ?", true).Order(o).Preload("Clips").Find(v)
+	result := database.Where(query).Where("publish = ?", true).Order(o).Preload("Clips").Find(v)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
@@ -32,14 +30,14 @@ func GetAllVods(v *[]Vod, query Vod, o string) (err error) {
 }
 
 func AddNewVod(v *Vod) (err error) {
-	if err = database.DB.Create(v).Error; err != nil {
+	if err = database.Create(v).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func GetOneVod(v *Vod, uuid string) (err error) {
-	result := database.DB.Where("uuid = ?", uuid).Where("publish = ?", true).Preload("Clips").Find(v)
+	result := database.Where("uuid = ?", uuid).Where("publish = ?", true).Preload("Clips").Find(v)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
@@ -51,13 +49,13 @@ func PatchVod(v *Vod, uuid string) (err error) {
 	if err := GetOneVod(&vod, uuid); err != nil {
 		return errors.New("vod not found")
 	}
-	if err := database.DB.Where("uuid = ?", uuid).Updates(v).Error; err != nil {
+	if err := database.Where("uuid = ?", uuid).Updates(v).Error; err != nil {
 		return errors.New("update failed")
 	}
 	return nil
 }
 
 func DeleteVod(v *Vod, uuid string) (err error) {
-	database.DB.Where("uuid = ?", uuid).Delete(v)
+	database.Where("uuid = ?", uuid).Delete(v)
 	return nil
 }
