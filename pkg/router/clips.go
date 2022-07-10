@@ -1,17 +1,12 @@
 package router
 
 import (
+	"fmt"
+
+	"github.com/AgileProggers/archiv-backend-go/pkg/database"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
 	"github.com/Gebes/there/v2"
 )
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
 
 // GetClips godoc
 // @Summary Get all clips
@@ -35,37 +30,14 @@ func stringInSlice(a string, list []string) bool {
 // @Param vod query string false "The vod id of a clip"
 // @Param order query string false "Set order direction divided by comma. Possible ordering values: 'date', 'duration', 'size'. Possible directions: 'asc', 'desc'. Example: 'date,desc'"
 func GetClips(request there.HttpRequest) there.HttpResponse {
-	var clips []int
-	// var query database.Clip
+	var clips []*ent.Clip
+	params := map[string][]string(*request.Params)
 
-	// err := request.Body.BindJson(&query)
-	// if err != nil {
-	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind query: %v", err))
-	// }
-	// err = bindingValidator.Struct(query)
-	// if err != nil {
-	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("validation error: %v", err))
-	// }
-
-	// // custom ordering query
-	// orderParams := request.Params.GetDefault("order", "")
-	// if len(orderParams) != 0 {
-	// 	order := strings.Split(orderParams, ",")
-	// 	if len(order) != 2 {
-	// 		return there.Error(there.StatusBadRequest, "Invalid order params. Example: 'date,desc'")
-	// 	}
-	// 	if !stringInSlice(order[0], []string{"date", "duration", "size"}) {
-	// 		return there.Error(there.StatusBadRequest, "Invalid first order param. 'date', 'duration' or 'size'")
-	// 	}
-	// 	if !stringInSlice(order[1], []string{"asc", "desc"}) {
-	// 		return there.Error(there.StatusBadRequest, "Invalid second order param. 'asc' or 'desc'")
-	// 	}
-	// 	orderParams = strings.Replace(orderParams, ",", " ", -1)
-	// }
-
-	// if err := database.GetAllClips(&clips, query, orderParams); err != nil {
-	// 	return there.Error(there.StatusNotFound, "No clips found")
-	// }
+	clips, err := database.ClipsByQuery(params)
+	// println(request.Params.GetSlice())
+	if err != nil {
+		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to filter clips: %v", err))
+	}
 
 	return there.Json(there.StatusOK, clips)
 }
