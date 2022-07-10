@@ -35,6 +35,19 @@ func (f CreatorFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return f(ctx, mv)
 }
 
+// The EmoteFunc type is an adapter to allow the use of ordinary
+// function as Emote mutator.
+type EmoteFunc func(context.Context, *ent.EmoteMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EmoteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.EmoteMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EmoteMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The GameFunc type is an adapter to allow the use of ordinary
 // function as Game mutator.
 type GameFunc func(context.Context, *ent.GameMutation) (ent.Value, error)
@@ -44,6 +57,19 @@ func (f GameFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	mv, ok := m.(*ent.GameMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The ProviderFunc type is an adapter to allow the use of ordinary
+// function as Provider mutator.
+type ProviderFunc func(context.Context, *ent.ProviderMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProviderFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ProviderMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProviderMutation", m)
 	}
 	return f(ctx, mv)
 }

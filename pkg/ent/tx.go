@@ -16,8 +16,12 @@ type Tx struct {
 	Clip *ClipClient
 	// Creator is the client for interacting with the Creator builders.
 	Creator *CreatorClient
+	// Emote is the client for interacting with the Emote builders.
+	Emote *EmoteClient
 	// Game is the client for interacting with the Game builders.
 	Game *GameClient
+	// Provider is the client for interacting with the Provider builders.
+	Provider *ProviderClient
 	// Vod is the client for interacting with the Vod builders.
 	Vod *VodClient
 
@@ -157,7 +161,9 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Clip = NewClipClient(tx.config)
 	tx.Creator = NewCreatorClient(tx.config)
+	tx.Emote = NewEmoteClient(tx.config)
 	tx.Game = NewGameClient(tx.config)
+	tx.Provider = NewProviderClient(tx.config)
 	tx.Vod = NewVodClient(tx.config)
 }
 

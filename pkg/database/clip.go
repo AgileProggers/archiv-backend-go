@@ -7,7 +7,7 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 )
 
-func Creators(c *[]ent.Clip, query ent.Clip) (err error) {
+func Clips(c *[]ent.Clip, query ent.Clip) (err error) {
 	// result := database.Where(query).Find(c)
 	// if result.RowsAffected == 0 {
 	// 	return errors.New("not found")

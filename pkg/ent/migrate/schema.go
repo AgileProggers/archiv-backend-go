@@ -45,6 +45,27 @@ var (
 		Columns:    CreatorsColumns,
 		PrimaryKey: []*schema.Column{CreatorsColumns[0]},
 	}
+	// EmotesColumns holds the columns for the "emotes" table.
+	EmotesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "url", Type: field.TypeString, Unique: true},
+		{Name: "provider_emotes", Type: field.TypeInt, Nullable: true},
+	}
+	// EmotesTable holds the schema information for the "emotes" table.
+	EmotesTable = &schema.Table{
+		Name:       "emotes",
+		Columns:    EmotesColumns,
+		PrimaryKey: []*schema.Column{EmotesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "emotes_providers_emotes",
+				Columns:    []*schema.Column{EmotesColumns[3]},
+				RefColumns: []*schema.Column{ProvidersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// GamesColumns holds the columns for the "games" table.
 	GamesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -73,6 +94,17 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+	}
+	// ProvidersColumns holds the columns for the "providers" table.
+	ProvidersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+	}
+	// ProvidersTable holds the schema information for the "providers" table.
+	ProvidersTable = &schema.Table{
+		Name:       "providers",
+		Columns:    ProvidersColumns,
+		PrimaryKey: []*schema.Column{ProvidersColumns[0]},
 	}
 	// VodsColumns holds the columns for the "vods" table.
 	VodsColumns = []*schema.Column{
@@ -121,7 +153,9 @@ var (
 	Tables = []*schema.Table{
 		ClipsTable,
 		CreatorsTable,
+		EmotesTable,
 		GamesTable,
+		ProvidersTable,
 		VodsTable,
 		VodClipsTable,
 	}
@@ -129,6 +163,7 @@ var (
 
 func init() {
 	ClipsTable.ForeignKeys[0].RefTable = CreatorsTable
+	EmotesTable.ForeignKeys[0].RefTable = ProvidersTable
 	GamesTable.ForeignKeys[0].RefTable = ClipsTable
 	GamesTable.ForeignKeys[1].RefTable = VodsTable
 	VodClipsTable.ForeignKeys[0].RefTable = VodsTable

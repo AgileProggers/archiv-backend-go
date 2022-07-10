@@ -11,8 +11,10 @@ import (
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/emote"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/provider"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 
 	"entgo.io/ent"
@@ -27,10 +29,12 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeClip    = "Clip"
-	TypeCreator = "Creator"
-	TypeGame    = "Game"
-	TypeVod     = "Vod"
+	TypeClip     = "Clip"
+	TypeCreator  = "Creator"
+	TypeEmote    = "Emote"
+	TypeGame     = "Game"
+	TypeProvider = "Provider"
+	TypeVod      = "Vod"
 )
 
 // ClipMutation represents an operation that mutates the Clip nodes in the graph.
@@ -1409,6 +1413,440 @@ func (m *CreatorMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Creator edge %s", name)
 }
 
+// EmoteMutation represents an operation that mutates the Emote nodes in the graph.
+type EmoteMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *int
+	name            *string
+	url             *string
+	clearedFields   map[string]struct{}
+	provider        *int
+	clearedprovider bool
+	done            bool
+	oldValue        func(context.Context) (*Emote, error)
+	predicates      []predicate.Emote
+}
+
+var _ ent.Mutation = (*EmoteMutation)(nil)
+
+// emoteOption allows management of the mutation configuration using functional options.
+type emoteOption func(*EmoteMutation)
+
+// newEmoteMutation creates new mutation for the Emote entity.
+func newEmoteMutation(c config, op Op, opts ...emoteOption) *EmoteMutation {
+	m := &EmoteMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeEmote,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withEmoteID sets the ID field of the mutation.
+func withEmoteID(id int) emoteOption {
+	return func(m *EmoteMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Emote
+		)
+		m.oldValue = func(ctx context.Context) (*Emote, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Emote.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withEmote sets the old Emote of the mutation.
+func withEmote(node *Emote) emoteOption {
+	return func(m *EmoteMutation) {
+		m.oldValue = func(context.Context) (*Emote, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m EmoteMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m EmoteMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *EmoteMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *EmoteMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Emote.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *EmoteMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *EmoteMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Emote entity.
+// If the Emote object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmoteMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *EmoteMutation) ResetName() {
+	m.name = nil
+}
+
+// SetURL sets the "url" field.
+func (m *EmoteMutation) SetURL(s string) {
+	m.url = &s
+}
+
+// URL returns the value of the "url" field in the mutation.
+func (m *EmoteMutation) URL() (r string, exists bool) {
+	v := m.url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldURL returns the old "url" field's value of the Emote entity.
+// If the Emote object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmoteMutation) OldURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldURL: %w", err)
+	}
+	return oldValue.URL, nil
+}
+
+// ResetURL resets all changes to the "url" field.
+func (m *EmoteMutation) ResetURL() {
+	m.url = nil
+}
+
+// SetProviderID sets the "provider" edge to the Provider entity by id.
+func (m *EmoteMutation) SetProviderID(id int) {
+	m.provider = &id
+}
+
+// ClearProvider clears the "provider" edge to the Provider entity.
+func (m *EmoteMutation) ClearProvider() {
+	m.clearedprovider = true
+}
+
+// ProviderCleared reports if the "provider" edge to the Provider entity was cleared.
+func (m *EmoteMutation) ProviderCleared() bool {
+	return m.clearedprovider
+}
+
+// ProviderID returns the "provider" edge ID in the mutation.
+func (m *EmoteMutation) ProviderID() (id int, exists bool) {
+	if m.provider != nil {
+		return *m.provider, true
+	}
+	return
+}
+
+// ProviderIDs returns the "provider" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProviderID instead. It exists only for internal usage by the builders.
+func (m *EmoteMutation) ProviderIDs() (ids []int) {
+	if id := m.provider; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProvider resets all changes to the "provider" edge.
+func (m *EmoteMutation) ResetProvider() {
+	m.provider = nil
+	m.clearedprovider = false
+}
+
+// Where appends a list predicates to the EmoteMutation builder.
+func (m *EmoteMutation) Where(ps ...predicate.Emote) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *EmoteMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Emote).
+func (m *EmoteMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *EmoteMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, emote.FieldName)
+	}
+	if m.url != nil {
+		fields = append(fields, emote.FieldURL)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *EmoteMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case emote.FieldName:
+		return m.Name()
+	case emote.FieldURL:
+		return m.URL()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *EmoteMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case emote.FieldName:
+		return m.OldName(ctx)
+	case emote.FieldURL:
+		return m.OldURL(ctx)
+	}
+	return nil, fmt.Errorf("unknown Emote field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EmoteMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case emote.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case emote.FieldURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetURL(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Emote field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *EmoteMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *EmoteMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EmoteMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Emote numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *EmoteMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *EmoteMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *EmoteMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Emote nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *EmoteMutation) ResetField(name string) error {
+	switch name {
+	case emote.FieldName:
+		m.ResetName()
+		return nil
+	case emote.FieldURL:
+		m.ResetURL()
+		return nil
+	}
+	return fmt.Errorf("unknown Emote field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *EmoteMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.provider != nil {
+		edges = append(edges, emote.EdgeProvider)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *EmoteMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case emote.EdgeProvider:
+		if id := m.provider; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *EmoteMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *EmoteMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *EmoteMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedprovider {
+		edges = append(edges, emote.EdgeProvider)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *EmoteMutation) EdgeCleared(name string) bool {
+	switch name {
+	case emote.EdgeProvider:
+		return m.clearedprovider
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *EmoteMutation) ClearEdge(name string) error {
+	switch name {
+	case emote.EdgeProvider:
+		m.ClearProvider()
+		return nil
+	}
+	return fmt.Errorf("unknown Emote unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *EmoteMutation) ResetEdge(name string) error {
+	switch name {
+	case emote.EdgeProvider:
+		m.ResetProvider()
+		return nil
+	}
+	return fmt.Errorf("unknown Emote edge %s", name)
+}
+
 // GameMutation represents an operation that mutates the Game nodes in the graph.
 type GameMutation struct {
 	config
@@ -1990,6 +2428,410 @@ func (m *GameMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Game edge %s", name)
+}
+
+// ProviderMutation represents an operation that mutates the Provider nodes in the graph.
+type ProviderMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	name          *string
+	clearedFields map[string]struct{}
+	emotes        map[int]struct{}
+	removedemotes map[int]struct{}
+	clearedemotes bool
+	done          bool
+	oldValue      func(context.Context) (*Provider, error)
+	predicates    []predicate.Provider
+}
+
+var _ ent.Mutation = (*ProviderMutation)(nil)
+
+// providerOption allows management of the mutation configuration using functional options.
+type providerOption func(*ProviderMutation)
+
+// newProviderMutation creates new mutation for the Provider entity.
+func newProviderMutation(c config, op Op, opts ...providerOption) *ProviderMutation {
+	m := &ProviderMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProvider,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProviderID sets the ID field of the mutation.
+func withProviderID(id int) providerOption {
+	return func(m *ProviderMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Provider
+		)
+		m.oldValue = func(ctx context.Context) (*Provider, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Provider.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProvider sets the old Provider of the mutation.
+func withProvider(node *Provider) providerOption {
+	return func(m *ProviderMutation) {
+		m.oldValue = func(context.Context) (*Provider, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProviderMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProviderMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProviderMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProviderMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Provider.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *ProviderMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ProviderMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Provider entity.
+// If the Provider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProviderMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ProviderMutation) ResetName() {
+	m.name = nil
+}
+
+// AddEmoteIDs adds the "emotes" edge to the Emote entity by ids.
+func (m *ProviderMutation) AddEmoteIDs(ids ...int) {
+	if m.emotes == nil {
+		m.emotes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.emotes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearEmotes clears the "emotes" edge to the Emote entity.
+func (m *ProviderMutation) ClearEmotes() {
+	m.clearedemotes = true
+}
+
+// EmotesCleared reports if the "emotes" edge to the Emote entity was cleared.
+func (m *ProviderMutation) EmotesCleared() bool {
+	return m.clearedemotes
+}
+
+// RemoveEmoteIDs removes the "emotes" edge to the Emote entity by IDs.
+func (m *ProviderMutation) RemoveEmoteIDs(ids ...int) {
+	if m.removedemotes == nil {
+		m.removedemotes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.emotes, ids[i])
+		m.removedemotes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedEmotes returns the removed IDs of the "emotes" edge to the Emote entity.
+func (m *ProviderMutation) RemovedEmotesIDs() (ids []int) {
+	for id := range m.removedemotes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// EmotesIDs returns the "emotes" edge IDs in the mutation.
+func (m *ProviderMutation) EmotesIDs() (ids []int) {
+	for id := range m.emotes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetEmotes resets all changes to the "emotes" edge.
+func (m *ProviderMutation) ResetEmotes() {
+	m.emotes = nil
+	m.clearedemotes = false
+	m.removedemotes = nil
+}
+
+// Where appends a list predicates to the ProviderMutation builder.
+func (m *ProviderMutation) Where(ps ...predicate.Provider) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *ProviderMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Provider).
+func (m *ProviderMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProviderMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.name != nil {
+		fields = append(fields, provider.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProviderMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case provider.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProviderMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case provider.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown Provider field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProviderMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case provider.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Provider field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProviderMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProviderMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProviderMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Provider numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProviderMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProviderMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProviderMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Provider nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProviderMutation) ResetField(name string) error {
+	switch name {
+	case provider.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown Provider field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProviderMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.emotes != nil {
+		edges = append(edges, provider.EdgeEmotes)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProviderMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case provider.EdgeEmotes:
+		ids := make([]ent.Value, 0, len(m.emotes))
+		for id := range m.emotes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProviderMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedemotes != nil {
+		edges = append(edges, provider.EdgeEmotes)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProviderMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case provider.EdgeEmotes:
+		ids := make([]ent.Value, 0, len(m.removedemotes))
+		for id := range m.removedemotes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProviderMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedemotes {
+		edges = append(edges, provider.EdgeEmotes)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProviderMutation) EdgeCleared(name string) bool {
+	switch name {
+	case provider.EdgeEmotes:
+		return m.clearedemotes
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProviderMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Provider unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProviderMutation) ResetEdge(name string) error {
+	switch name {
+	case provider.EdgeEmotes:
+		m.ResetEmotes()
+		return nil
+	}
+	return fmt.Errorf("unknown Provider edge %s", name)
 }
 
 // VodMutation represents an operation that mutates the Vod nodes in the graph.

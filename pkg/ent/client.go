@@ -11,7 +11,9 @@ import (
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/emote"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/provider"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 
 	"entgo.io/ent/dialect"
@@ -28,8 +30,12 @@ type Client struct {
 	Clip *ClipClient
 	// Creator is the client for interacting with the Creator builders.
 	Creator *CreatorClient
+	// Emote is the client for interacting with the Emote builders.
+	Emote *EmoteClient
 	// Game is the client for interacting with the Game builders.
 	Game *GameClient
+	// Provider is the client for interacting with the Provider builders.
+	Provider *ProviderClient
 	// Vod is the client for interacting with the Vod builders.
 	Vod *VodClient
 }
@@ -47,7 +53,9 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Clip = NewClipClient(c.config)
 	c.Creator = NewCreatorClient(c.config)
+	c.Emote = NewEmoteClient(c.config)
 	c.Game = NewGameClient(c.config)
+	c.Provider = NewProviderClient(c.config)
 	c.Vod = NewVodClient(c.config)
 }
 
@@ -80,12 +88,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Clip:    NewClipClient(cfg),
-		Creator: NewCreatorClient(cfg),
-		Game:    NewGameClient(cfg),
-		Vod:     NewVodClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		Clip:     NewClipClient(cfg),
+		Creator:  NewCreatorClient(cfg),
+		Emote:    NewEmoteClient(cfg),
+		Game:     NewGameClient(cfg),
+		Provider: NewProviderClient(cfg),
+		Vod:      NewVodClient(cfg),
 	}, nil
 }
 
@@ -103,12 +113,14 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Clip:    NewClipClient(cfg),
-		Creator: NewCreatorClient(cfg),
-		Game:    NewGameClient(cfg),
-		Vod:     NewVodClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		Clip:     NewClipClient(cfg),
+		Creator:  NewCreatorClient(cfg),
+		Emote:    NewEmoteClient(cfg),
+		Game:     NewGameClient(cfg),
+		Provider: NewProviderClient(cfg),
+		Vod:      NewVodClient(cfg),
 	}, nil
 }
 
@@ -140,7 +152,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Clip.Use(hooks...)
 	c.Creator.Use(hooks...)
+	c.Emote.Use(hooks...)
 	c.Game.Use(hooks...)
+	c.Provider.Use(hooks...)
 	c.Vod.Use(hooks...)
 }
 
@@ -388,6 +402,112 @@ func (c *CreatorClient) Hooks() []Hook {
 	return c.hooks.Creator
 }
 
+// EmoteClient is a client for the Emote schema.
+type EmoteClient struct {
+	config
+}
+
+// NewEmoteClient returns a client for the Emote from the given config.
+func NewEmoteClient(c config) *EmoteClient {
+	return &EmoteClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emote.Hooks(f(g(h())))`.
+func (c *EmoteClient) Use(hooks ...Hook) {
+	c.hooks.Emote = append(c.hooks.Emote, hooks...)
+}
+
+// Create returns a create builder for Emote.
+func (c *EmoteClient) Create() *EmoteCreate {
+	mutation := newEmoteMutation(c.config, OpCreate)
+	return &EmoteCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Emote entities.
+func (c *EmoteClient) CreateBulk(builders ...*EmoteCreate) *EmoteCreateBulk {
+	return &EmoteCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Emote.
+func (c *EmoteClient) Update() *EmoteUpdate {
+	mutation := newEmoteMutation(c.config, OpUpdate)
+	return &EmoteUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmoteClient) UpdateOne(e *Emote) *EmoteUpdateOne {
+	mutation := newEmoteMutation(c.config, OpUpdateOne, withEmote(e))
+	return &EmoteUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmoteClient) UpdateOneID(id int) *EmoteUpdateOne {
+	mutation := newEmoteMutation(c.config, OpUpdateOne, withEmoteID(id))
+	return &EmoteUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Emote.
+func (c *EmoteClient) Delete() *EmoteDelete {
+	mutation := newEmoteMutation(c.config, OpDelete)
+	return &EmoteDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *EmoteClient) DeleteOne(e *Emote) *EmoteDeleteOne {
+	return c.DeleteOneID(e.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *EmoteClient) DeleteOneID(id int) *EmoteDeleteOne {
+	builder := c.Delete().Where(emote.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmoteDeleteOne{builder}
+}
+
+// Query returns a query builder for Emote.
+func (c *EmoteClient) Query() *EmoteQuery {
+	return &EmoteQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Emote entity by its id.
+func (c *EmoteClient) Get(ctx context.Context, id int) (*Emote, error) {
+	return c.Query().Where(emote.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmoteClient) GetX(ctx context.Context, id int) *Emote {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProvider queries the provider edge of a Emote.
+func (c *EmoteClient) QueryProvider(e *Emote) *ProviderQuery {
+	query := &ProviderQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emote.Table, emote.FieldID, id),
+			sqlgraph.To(provider.Table, provider.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emote.ProviderTable, emote.ProviderColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EmoteClient) Hooks() []Hook {
+	return c.hooks.Emote
+}
+
 // GameClient is a client for the Game schema.
 type GameClient struct {
 	config
@@ -508,6 +628,112 @@ func (c *GameClient) QueryVod(ga *Game) *VodQuery {
 // Hooks returns the client hooks.
 func (c *GameClient) Hooks() []Hook {
 	return c.hooks.Game
+}
+
+// ProviderClient is a client for the Provider schema.
+type ProviderClient struct {
+	config
+}
+
+// NewProviderClient returns a client for the Provider from the given config.
+func NewProviderClient(c config) *ProviderClient {
+	return &ProviderClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `provider.Hooks(f(g(h())))`.
+func (c *ProviderClient) Use(hooks ...Hook) {
+	c.hooks.Provider = append(c.hooks.Provider, hooks...)
+}
+
+// Create returns a create builder for Provider.
+func (c *ProviderClient) Create() *ProviderCreate {
+	mutation := newProviderMutation(c.config, OpCreate)
+	return &ProviderCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Provider entities.
+func (c *ProviderClient) CreateBulk(builders ...*ProviderCreate) *ProviderCreateBulk {
+	return &ProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Provider.
+func (c *ProviderClient) Update() *ProviderUpdate {
+	mutation := newProviderMutation(c.config, OpUpdate)
+	return &ProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProviderClient) UpdateOne(pr *Provider) *ProviderUpdateOne {
+	mutation := newProviderMutation(c.config, OpUpdateOne, withProvider(pr))
+	return &ProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProviderClient) UpdateOneID(id int) *ProviderUpdateOne {
+	mutation := newProviderMutation(c.config, OpUpdateOne, withProviderID(id))
+	return &ProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Provider.
+func (c *ProviderClient) Delete() *ProviderDelete {
+	mutation := newProviderMutation(c.config, OpDelete)
+	return &ProviderDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *ProviderClient) DeleteOne(pr *Provider) *ProviderDeleteOne {
+	return c.DeleteOneID(pr.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *ProviderClient) DeleteOneID(id int) *ProviderDeleteOne {
+	builder := c.Delete().Where(provider.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProviderDeleteOne{builder}
+}
+
+// Query returns a query builder for Provider.
+func (c *ProviderClient) Query() *ProviderQuery {
+	return &ProviderQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Provider entity by its id.
+func (c *ProviderClient) Get(ctx context.Context, id int) (*Provider, error) {
+	return c.Query().Where(provider.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProviderClient) GetX(ctx context.Context, id int) *Provider {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEmotes queries the emotes edge of a Provider.
+func (c *ProviderClient) QueryEmotes(pr *Provider) *EmoteQuery {
+	query := &EmoteQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(provider.Table, provider.FieldID, id),
+			sqlgraph.To(emote.Table, emote.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, provider.EmotesTable, provider.EmotesColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ProviderClient) Hooks() []Hook {
+	return c.hooks.Provider
 }
 
 // VodClient is a client for the Vod schema.
