@@ -85,21 +85,12 @@ var (
 		{Name: "fps", Type: field.TypeFloat64},
 		{Name: "size", Type: field.TypeInt},
 		{Name: "publish", Type: field.TypeBool},
-		{Name: "creator_vods", Type: field.TypeInt, Nullable: true},
 	}
 	// VodsTable holds the schema information for the "vods" table.
 	VodsTable = &schema.Table{
 		Name:       "vods",
 		Columns:    VodsColumns,
 		PrimaryKey: []*schema.Column{VodsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "vods_creators_vods",
-				Columns:    []*schema.Column{VodsColumns[9]},
-				RefColumns: []*schema.Column{CreatorsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// VodClipsColumns holds the columns for the "vod_clips" table.
 	VodClipsColumns = []*schema.Column{
@@ -140,7 +131,6 @@ func init() {
 	ClipsTable.ForeignKeys[0].RefTable = CreatorsTable
 	GamesTable.ForeignKeys[0].RefTable = ClipsTable
 	GamesTable.ForeignKeys[1].RefTable = VodsTable
-	VodsTable.ForeignKeys[0].RefTable = CreatorsTable
 	VodClipsTable.ForeignKeys[0].RefTable = VodsTable
 	VodClipsTable.ForeignKeys[1].RefTable = ClipsTable
 }

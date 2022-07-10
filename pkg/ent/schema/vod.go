@@ -28,9 +28,6 @@ func (Vod) Fields() []ent.Field {
 // Edges of the Vod.
 func (Vod) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("creator", Creator.Type).
-			Ref("vods").
-			Unique(),
 		edge.To("clips", Clip.Type),
 		edge.To("game", Game.Type),
 	}

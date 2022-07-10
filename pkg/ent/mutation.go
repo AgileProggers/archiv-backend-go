@@ -1016,9 +1016,6 @@ type CreatorMutation struct {
 	clips         map[int]struct{}
 	removedclips  map[int]struct{}
 	clearedclips  bool
-	vods          map[int]struct{}
-	removedvods   map[int]struct{}
-	clearedvods   bool
 	done          bool
 	oldValue      func(context.Context) (*Creator, error)
 	predicates    []predicate.Creator
@@ -1212,60 +1209,6 @@ func (m *CreatorMutation) ResetClips() {
 	m.removedclips = nil
 }
 
-// AddVodIDs adds the "vods" edge to the Vod entity by ids.
-func (m *CreatorMutation) AddVodIDs(ids ...int) {
-	if m.vods == nil {
-		m.vods = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.vods[ids[i]] = struct{}{}
-	}
-}
-
-// ClearVods clears the "vods" edge to the Vod entity.
-func (m *CreatorMutation) ClearVods() {
-	m.clearedvods = true
-}
-
-// VodsCleared reports if the "vods" edge to the Vod entity was cleared.
-func (m *CreatorMutation) VodsCleared() bool {
-	return m.clearedvods
-}
-
-// RemoveVodIDs removes the "vods" edge to the Vod entity by IDs.
-func (m *CreatorMutation) RemoveVodIDs(ids ...int) {
-	if m.removedvods == nil {
-		m.removedvods = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.vods, ids[i])
-		m.removedvods[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedVods returns the removed IDs of the "vods" edge to the Vod entity.
-func (m *CreatorMutation) RemovedVodsIDs() (ids []int) {
-	for id := range m.removedvods {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// VodsIDs returns the "vods" edge IDs in the mutation.
-func (m *CreatorMutation) VodsIDs() (ids []int) {
-	for id := range m.vods {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetVods resets all changes to the "vods" edge.
-func (m *CreatorMutation) ResetVods() {
-	m.vods = nil
-	m.clearedvods = false
-	m.removedvods = nil
-}
-
 // Where appends a list predicates to the CreatorMutation builder.
 func (m *CreatorMutation) Where(ps ...predicate.Creator) {
 	m.predicates = append(m.predicates, ps...)
@@ -1384,12 +1327,9 @@ func (m *CreatorMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CreatorMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 1)
 	if m.clips != nil {
 		edges = append(edges, creator.EdgeClips)
-	}
-	if m.vods != nil {
-		edges = append(edges, creator.EdgeVods)
 	}
 	return edges
 }
@@ -1404,24 +1344,15 @@ func (m *CreatorMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case creator.EdgeVods:
-		ids := make([]ent.Value, 0, len(m.vods))
-		for id := range m.vods {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CreatorMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 1)
 	if m.removedclips != nil {
 		edges = append(edges, creator.EdgeClips)
-	}
-	if m.removedvods != nil {
-		edges = append(edges, creator.EdgeVods)
 	}
 	return edges
 }
@@ -1436,24 +1367,15 @@ func (m *CreatorMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case creator.EdgeVods:
-		ids := make([]ent.Value, 0, len(m.removedvods))
-		for id := range m.removedvods {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CreatorMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 1)
 	if m.clearedclips {
 		edges = append(edges, creator.EdgeClips)
-	}
-	if m.clearedvods {
-		edges = append(edges, creator.EdgeVods)
 	}
 	return edges
 }
@@ -1464,8 +1386,6 @@ func (m *CreatorMutation) EdgeCleared(name string) bool {
 	switch name {
 	case creator.EdgeClips:
 		return m.clearedclips
-	case creator.EdgeVods:
-		return m.clearedvods
 	}
 	return false
 }
@@ -1484,9 +1404,6 @@ func (m *CreatorMutation) ResetEdge(name string) error {
 	switch name {
 	case creator.EdgeClips:
 		m.ResetClips()
-		return nil
-	case creator.EdgeVods:
-		m.ResetVods()
 		return nil
 	}
 	return fmt.Errorf("unknown Creator edge %s", name)
@@ -2078,32 +1995,30 @@ func (m *GameMutation) ResetEdge(name string) error {
 // VodMutation represents an operation that mutates the Vod nodes in the graph.
 type VodMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	title          *string
-	duration       *int
-	addduration    *int
-	date           *time.Time
-	filename       *string
-	resolution     *string
-	fps            *float64
-	addfps         *float64
-	size           *int
-	addsize        *int
-	publish        *bool
-	clearedFields  map[string]struct{}
-	creator        *int
-	clearedcreator bool
-	clips          map[int]struct{}
-	removedclips   map[int]struct{}
-	clearedclips   bool
-	game           map[int]struct{}
-	removedgame    map[int]struct{}
-	clearedgame    bool
-	done           bool
-	oldValue       func(context.Context) (*Vod, error)
-	predicates     []predicate.Vod
+	op            Op
+	typ           string
+	id            *int
+	title         *string
+	duration      *int
+	addduration   *int
+	date          *time.Time
+	filename      *string
+	resolution    *string
+	fps           *float64
+	addfps        *float64
+	size          *int
+	addsize       *int
+	publish       *bool
+	clearedFields map[string]struct{}
+	clips         map[int]struct{}
+	removedclips  map[int]struct{}
+	clearedclips  bool
+	game          map[int]struct{}
+	removedgame   map[int]struct{}
+	clearedgame   bool
+	done          bool
+	oldValue      func(context.Context) (*Vod, error)
+	predicates    []predicate.Vod
 }
 
 var _ ent.Mutation = (*VodMutation)(nil)
@@ -2552,45 +2467,6 @@ func (m *VodMutation) ResetPublish() {
 	m.publish = nil
 }
 
-// SetCreatorID sets the "creator" edge to the Creator entity by id.
-func (m *VodMutation) SetCreatorID(id int) {
-	m.creator = &id
-}
-
-// ClearCreator clears the "creator" edge to the Creator entity.
-func (m *VodMutation) ClearCreator() {
-	m.clearedcreator = true
-}
-
-// CreatorCleared reports if the "creator" edge to the Creator entity was cleared.
-func (m *VodMutation) CreatorCleared() bool {
-	return m.clearedcreator
-}
-
-// CreatorID returns the "creator" edge ID in the mutation.
-func (m *VodMutation) CreatorID() (id int, exists bool) {
-	if m.creator != nil {
-		return *m.creator, true
-	}
-	return
-}
-
-// CreatorIDs returns the "creator" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// CreatorID instead. It exists only for internal usage by the builders.
-func (m *VodMutation) CreatorIDs() (ids []int) {
-	if id := m.creator; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetCreator resets all changes to the "creator" edge.
-func (m *VodMutation) ResetCreator() {
-	m.creator = nil
-	m.clearedcreator = false
-}
-
 // AddClipIDs adds the "clips" edge to the Clip entity by ids.
 func (m *VodMutation) AddClipIDs(ids ...int) {
 	if m.clips == nil {
@@ -2975,10 +2851,7 @@ func (m *VodMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VodMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
-	if m.creator != nil {
-		edges = append(edges, vod.EdgeCreator)
-	}
+	edges := make([]string, 0, 2)
 	if m.clips != nil {
 		edges = append(edges, vod.EdgeClips)
 	}
@@ -2992,10 +2865,6 @@ func (m *VodMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *VodMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case vod.EdgeCreator:
-		if id := m.creator; id != nil {
-			return []ent.Value{*id}
-		}
 	case vod.EdgeClips:
 		ids := make([]ent.Value, 0, len(m.clips))
 		for id := range m.clips {
@@ -3014,7 +2883,7 @@ func (m *VodMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *VodMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.removedclips != nil {
 		edges = append(edges, vod.EdgeClips)
 	}
@@ -3046,10 +2915,7 @@ func (m *VodMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VodMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
-	if m.clearedcreator {
-		edges = append(edges, vod.EdgeCreator)
-	}
+	edges := make([]string, 0, 2)
 	if m.clearedclips {
 		edges = append(edges, vod.EdgeClips)
 	}
@@ -3063,8 +2929,6 @@ func (m *VodMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *VodMutation) EdgeCleared(name string) bool {
 	switch name {
-	case vod.EdgeCreator:
-		return m.clearedcreator
 	case vod.EdgeClips:
 		return m.clearedclips
 	case vod.EdgeGame:
@@ -3077,9 +2941,6 @@ func (m *VodMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *VodMutation) ClearEdge(name string) error {
 	switch name {
-	case vod.EdgeCreator:
-		m.ClearCreator()
-		return nil
 	}
 	return fmt.Errorf("unknown Vod unique edge %s", name)
 }
@@ -3088,9 +2949,6 @@ func (m *VodMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *VodMutation) ResetEdge(name string) error {
 	switch name {
-	case vod.EdgeCreator:
-		m.ResetCreator()
-		return nil
 	case vod.EdgeClips:
 		m.ResetClips()
 		return nil

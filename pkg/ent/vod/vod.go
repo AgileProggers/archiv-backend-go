@@ -23,21 +23,12 @@ const (
 	FieldSize = "size"
 	// FieldPublish holds the string denoting the publish field in the database.
 	FieldPublish = "publish"
-	// EdgeCreator holds the string denoting the creator edge name in mutations.
-	EdgeCreator = "creator"
 	// EdgeClips holds the string denoting the clips edge name in mutations.
 	EdgeClips = "clips"
 	// EdgeGame holds the string denoting the game edge name in mutations.
 	EdgeGame = "game"
 	// Table holds the table name of the vod in the database.
 	Table = "vods"
-	// CreatorTable is the table that holds the creator relation/edge.
-	CreatorTable = "vods"
-	// CreatorInverseTable is the table name for the Creator entity.
-	// It exists in this package in order to avoid circular dependency with the "creator" package.
-	CreatorInverseTable = "creators"
-	// CreatorColumn is the table column denoting the creator relation/edge.
-	CreatorColumn = "creator_vods"
 	// ClipsTable is the table that holds the clips relation/edge. The primary key declared below.
 	ClipsTable = "vod_clips"
 	// ClipsInverseTable is the table name for the Clip entity.
@@ -65,12 +56,6 @@ var Columns = []string{
 	FieldPublish,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "vods"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"creator_vods",
-}
-
 var (
 	// ClipsPrimaryKey and ClipsColumn2 are the table columns denoting the
 	// primary key for the clips relation (M2M).
@@ -81,11 +66,6 @@ var (
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

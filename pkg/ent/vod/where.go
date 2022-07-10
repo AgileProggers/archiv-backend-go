@@ -800,34 +800,6 @@ func PublishNEQ(v bool) predicate.Vod {
 	})
 }
 
-// HasCreator applies the HasEdge predicate on the "creator" edge.
-func HasCreator() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(CreatorTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CreatorTable, CreatorColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCreatorWith applies the HasEdge predicate on the "creator" edge with a given conditions (other predicates).
-func HasCreatorWith(preds ...predicate.Creator) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(CreatorInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CreatorTable, CreatorColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasClips applies the HasEdge predicate on the "clips" edge.
 func HasClips() predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {

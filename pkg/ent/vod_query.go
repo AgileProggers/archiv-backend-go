@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
-	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
@@ -29,10 +28,8 @@ type VodQuery struct {
 	fields     []string
 	predicates []predicate.Vod
 	// eager-loading edges.
-	withCreator *CreatorQuery
-	withClips   *ClipQuery
-	withGame    *GameQuery
-	withFKs     bool
+	withClips *ClipQuery
+	withGame  *GameQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -67,28 +64,6 @@ func (vq *VodQuery) Unique(unique bool) *VodQuery {
 func (vq *VodQuery) Order(o ...OrderFunc) *VodQuery {
 	vq.order = append(vq.order, o...)
 	return vq
-}
-
-// QueryCreator chains the current query on the "creator" edge.
-func (vq *VodQuery) QueryCreator() *CreatorQuery {
-	query := &CreatorQuery{config: vq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := vq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := vq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(vod.Table, vod.FieldID, selector),
-			sqlgraph.To(creator.Table, creator.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, vod.CreatorTable, vod.CreatorColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // QueryClips chains the current query on the "clips" edge.
@@ -311,30 +286,18 @@ func (vq *VodQuery) Clone() *VodQuery {
 		return nil
 	}
 	return &VodQuery{
-		config:      vq.config,
-		limit:       vq.limit,
-		offset:      vq.offset,
-		order:       append([]OrderFunc{}, vq.order...),
-		predicates:  append([]predicate.Vod{}, vq.predicates...),
-		withCreator: vq.withCreator.Clone(),
-		withClips:   vq.withClips.Clone(),
-		withGame:    vq.withGame.Clone(),
+		config:     vq.config,
+		limit:      vq.limit,
+		offset:     vq.offset,
+		order:      append([]OrderFunc{}, vq.order...),
+		predicates: append([]predicate.Vod{}, vq.predicates...),
+		withClips:  vq.withClips.Clone(),
+		withGame:   vq.withGame.Clone(),
 		// clone intermediate query.
 		sql:    vq.sql.Clone(),
 		path:   vq.path,
 		unique: vq.unique,
 	}
-}
-
-// WithCreator tells the query-builder to eager-load the nodes that are connected to
-// the "creator" edge. The optional arguments are used to configure the query builder of the edge.
-func (vq *VodQuery) WithCreator(opts ...func(*CreatorQuery)) *VodQuery {
-	query := &CreatorQuery{config: vq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	vq.withCreator = query
-	return vq
 }
 
 // WithClips tells the query-builder to eager-load the nodes that are connected to
@@ -423,20 +386,12 @@ func (vq *VodQuery) prepareQuery(ctx context.Context) error {
 func (vq *VodQuery) sqlAll(ctx context.Context) ([]*Vod, error) {
 	var (
 		nodes       = []*Vod{}
-		withFKs     = vq.withFKs
 		_spec       = vq.querySpec()
-		loadedTypes = [3]bool{
-			vq.withCreator != nil,
+		loadedTypes = [2]bool{
 			vq.withClips != nil,
 			vq.withGame != nil,
 		}
 	)
-	if vq.withCreator != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, vod.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Vod{config: vq.config}
 		nodes = append(nodes, node)
@@ -455,35 +410,6 @@ func (vq *VodQuery) sqlAll(ctx context.Context) ([]*Vod, error) {
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
-	}
-
-	if query := vq.withCreator; query != nil {
-		ids := make([]int, 0, len(nodes))
-		nodeids := make(map[int][]*Vod)
-		for i := range nodes {
-			if nodes[i].creator_vods == nil {
-				continue
-			}
-			fk := *nodes[i].creator_vods
-			if _, ok := nodeids[fk]; !ok {
-				ids = append(ids, fk)
-			}
-			nodeids[fk] = append(nodeids[fk], nodes[i])
-		}
-		query.Where(creator.IDIn(ids...))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "creator_vods" returned %v`, n.ID)
-			}
-			for i := range nodes {
-				nodes[i].Edges.Creator = n
-			}
-		}
 	}
 
 	if query := vq.withClips; query != nil {

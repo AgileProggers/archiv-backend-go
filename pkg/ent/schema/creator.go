@@ -28,6 +28,5 @@ func (Creator) Fields() []ent.Field {
 func (Creator) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("clips", Clip.Type),
-		edge.To("vods", Vod.Type),
 	}
 }

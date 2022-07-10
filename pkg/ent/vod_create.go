@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
-	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
@@ -69,25 +68,6 @@ func (vc *VodCreate) SetSize(i int) *VodCreate {
 func (vc *VodCreate) SetPublish(b bool) *VodCreate {
 	vc.mutation.SetPublish(b)
 	return vc
-}
-
-// SetCreatorID sets the "creator" edge to the Creator entity by ID.
-func (vc *VodCreate) SetCreatorID(id int) *VodCreate {
-	vc.mutation.SetCreatorID(id)
-	return vc
-}
-
-// SetNillableCreatorID sets the "creator" edge to the Creator entity by ID if the given value is not nil.
-func (vc *VodCreate) SetNillableCreatorID(id *int) *VodCreate {
-	if id != nil {
-		vc = vc.SetCreatorID(*id)
-	}
-	return vc
-}
-
-// SetCreator sets the "creator" edge to the Creator entity.
-func (vc *VodCreate) SetCreator(c *Creator) *VodCreate {
-	return vc.SetCreatorID(c.ID)
 }
 
 // AddClipIDs adds the "clips" edge to the Clip entity by IDs.
@@ -304,26 +284,6 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Column: vod.FieldPublish,
 		})
 		_node.Publish = value
-	}
-	if nodes := vc.mutation.CreatorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   vod.CreatorTable,
-			Columns: []string{vod.CreatorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: creator.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.creator_vods = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := vc.mutation.ClipsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

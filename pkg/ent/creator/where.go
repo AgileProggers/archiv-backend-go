@@ -237,34 +237,6 @@ func HasClipsWith(preds ...predicate.Clip) predicate.Creator {
 	})
 }
 
-// HasVods applies the HasEdge predicate on the "vods" edge.
-func HasVods() predicate.Creator {
-	return predicate.Creator(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(VodsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, VodsTable, VodsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasVodsWith applies the HasEdge predicate on the "vods" edge with a given conditions (other predicates).
-func HasVodsWith(preds ...predicate.Vod) predicate.Creator {
-	return predicate.Creator(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(VodsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, VodsTable, VodsColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Creator) predicate.Creator {
 	return predicate.Creator(func(s *sql.Selector) {

@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
-	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
@@ -100,25 +99,6 @@ func (vu *VodUpdate) SetPublish(b bool) *VodUpdate {
 	return vu
 }
 
-// SetCreatorID sets the "creator" edge to the Creator entity by ID.
-func (vu *VodUpdate) SetCreatorID(id int) *VodUpdate {
-	vu.mutation.SetCreatorID(id)
-	return vu
-}
-
-// SetNillableCreatorID sets the "creator" edge to the Creator entity by ID if the given value is not nil.
-func (vu *VodUpdate) SetNillableCreatorID(id *int) *VodUpdate {
-	if id != nil {
-		vu = vu.SetCreatorID(*id)
-	}
-	return vu
-}
-
-// SetCreator sets the "creator" edge to the Creator entity.
-func (vu *VodUpdate) SetCreator(c *Creator) *VodUpdate {
-	return vu.SetCreatorID(c.ID)
-}
-
 // AddClipIDs adds the "clips" edge to the Clip entity by IDs.
 func (vu *VodUpdate) AddClipIDs(ids ...int) *VodUpdate {
 	vu.mutation.AddClipIDs(ids...)
@@ -152,12 +132,6 @@ func (vu *VodUpdate) AddGame(g ...*Game) *VodUpdate {
 // Mutation returns the VodMutation object of the builder.
 func (vu *VodUpdate) Mutation() *VodMutation {
 	return vu.mutation
-}
-
-// ClearCreator clears the "creator" edge to the Creator entity.
-func (vu *VodUpdate) ClearCreator() *VodUpdate {
-	vu.mutation.ClearCreator()
-	return vu
 }
 
 // ClearClips clears all "clips" edges to the Clip entity.
@@ -350,41 +324,6 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Value:  value,
 			Column: vod.FieldPublish,
 		})
-	}
-	if vu.mutation.CreatorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   vod.CreatorTable,
-			Columns: []string{vod.CreatorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: creator.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := vu.mutation.CreatorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   vod.CreatorTable,
-			Columns: []string{vod.CreatorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: creator.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if vu.mutation.ClipsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -582,25 +521,6 @@ func (vuo *VodUpdateOne) SetPublish(b bool) *VodUpdateOne {
 	return vuo
 }
 
-// SetCreatorID sets the "creator" edge to the Creator entity by ID.
-func (vuo *VodUpdateOne) SetCreatorID(id int) *VodUpdateOne {
-	vuo.mutation.SetCreatorID(id)
-	return vuo
-}
-
-// SetNillableCreatorID sets the "creator" edge to the Creator entity by ID if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableCreatorID(id *int) *VodUpdateOne {
-	if id != nil {
-		vuo = vuo.SetCreatorID(*id)
-	}
-	return vuo
-}
-
-// SetCreator sets the "creator" edge to the Creator entity.
-func (vuo *VodUpdateOne) SetCreator(c *Creator) *VodUpdateOne {
-	return vuo.SetCreatorID(c.ID)
-}
-
 // AddClipIDs adds the "clips" edge to the Clip entity by IDs.
 func (vuo *VodUpdateOne) AddClipIDs(ids ...int) *VodUpdateOne {
 	vuo.mutation.AddClipIDs(ids...)
@@ -634,12 +554,6 @@ func (vuo *VodUpdateOne) AddGame(g ...*Game) *VodUpdateOne {
 // Mutation returns the VodMutation object of the builder.
 func (vuo *VodUpdateOne) Mutation() *VodMutation {
 	return vuo.mutation
-}
-
-// ClearCreator clears the "creator" edge to the Creator entity.
-func (vuo *VodUpdateOne) ClearCreator() *VodUpdateOne {
-	vuo.mutation.ClearCreator()
-	return vuo
 }
 
 // ClearClips clears all "clips" edges to the Clip entity.
@@ -856,41 +770,6 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Value:  value,
 			Column: vod.FieldPublish,
 		})
-	}
-	if vuo.mutation.CreatorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   vod.CreatorTable,
-			Columns: []string{vod.CreatorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: creator.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := vuo.mutation.CreatorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   vod.CreatorTable,
-			Columns: []string{vod.CreatorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: creator.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if vuo.mutation.ClipsCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -383,22 +383,6 @@ func (c *CreatorClient) QueryClips(cr *Creator) *ClipQuery {
 	return query
 }
 
-// QueryVods queries the vods edge of a Creator.
-func (c *CreatorClient) QueryVods(cr *Creator) *VodQuery {
-	query := &VodQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := cr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(creator.Table, creator.FieldID, id),
-			sqlgraph.To(vod.Table, vod.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, creator.VodsTable, creator.VodsColumn),
-		)
-		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *CreatorClient) Hooks() []Hook {
 	return c.hooks.Creator
@@ -609,22 +593,6 @@ func (c *VodClient) GetX(ctx context.Context, id int) *Vod {
 		panic(err)
 	}
 	return obj
-}
-
-// QueryCreator queries the creator edge of a Vod.
-func (c *VodClient) QueryCreator(v *Vod) *CreatorQuery {
-	query := &CreatorQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(vod.Table, vod.FieldID, id),
-			sqlgraph.To(creator.Table, creator.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, vod.CreatorTable, vod.CreatorColumn),
-		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // QueryClips queries the clips edge of a Vod.
