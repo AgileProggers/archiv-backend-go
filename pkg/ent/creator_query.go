@@ -15,6 +15,7 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
 
 // CreatorQuery is the builder for querying Creator entities.
@@ -28,6 +29,7 @@ type CreatorQuery struct {
 	predicates []predicate.Creator
 	// eager-loading edges.
 	withClips *ClipQuery
+	withVods  *VodQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -79,6 +81,28 @@ func (cq *CreatorQuery) QueryClips() *ClipQuery {
 			sqlgraph.From(creator.Table, creator.FieldID, selector),
 			sqlgraph.To(clip.Table, clip.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, creator.ClipsTable, creator.ClipsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryVods chains the current query on the "vods" edge.
+func (cq *CreatorQuery) QueryVods() *VodQuery {
+	query := &VodQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(creator.Table, creator.FieldID, selector),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, creator.VodsTable, creator.VodsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -268,6 +292,7 @@ func (cq *CreatorQuery) Clone() *CreatorQuery {
 		order:      append([]OrderFunc{}, cq.order...),
 		predicates: append([]predicate.Creator{}, cq.predicates...),
 		withClips:  cq.withClips.Clone(),
+		withVods:   cq.withVods.Clone(),
 		// clone intermediate query.
 		sql:    cq.sql.Clone(),
 		path:   cq.path,
@@ -283,6 +308,17 @@ func (cq *CreatorQuery) WithClips(opts ...func(*ClipQuery)) *CreatorQuery {
 		opt(query)
 	}
 	cq.withClips = query
+	return cq
+}
+
+// WithVods tells the query-builder to eager-load the nodes that are connected to
+// the "vods" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CreatorQuery) WithVods(opts ...func(*VodQuery)) *CreatorQuery {
+	query := &VodQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withVods = query
 	return cq
 }
 
@@ -351,8 +387,9 @@ func (cq *CreatorQuery) sqlAll(ctx context.Context) ([]*Creator, error) {
 	var (
 		nodes       = []*Creator{}
 		_spec       = cq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			cq.withClips != nil,
+			cq.withVods != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -401,6 +438,35 @@ func (cq *CreatorQuery) sqlAll(ctx context.Context) ([]*Creator, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "creator_clips" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Clips = append(node.Edges.Clips, n)
+		}
+	}
+
+	if query := cq.withVods; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Creator)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Vods = []*Vod{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Vod(func(s *sql.Selector) {
+			s.Where(sql.InValues(creator.VodsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.creator_vods
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "creator_vods" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "creator_vods" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Vods = append(node.Edges.Vods, n)
 		}
 	}
 

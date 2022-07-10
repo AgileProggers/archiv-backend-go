@@ -41,9 +41,13 @@ type Clip struct {
 type ClipEdges struct {
 	// Creator holds the value of the creator edge.
 	Creator *Creator `json:"creator,omitempty"`
+	// Vod holds the value of the vod edge.
+	Vod []*Vod `json:"vod,omitempty"`
+	// Game holds the value of the game edge.
+	Game []*Game `json:"game,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // CreatorOrErr returns the Creator value or an error if the edge
@@ -58,6 +62,24 @@ func (e ClipEdges) CreatorOrErr() (*Creator, error) {
 		return e.Creator, nil
 	}
 	return nil, &NotLoadedError{edge: "creator"}
+}
+
+// VodOrErr returns the Vod value or an error if the edge
+// was not loaded in eager-loading.
+func (e ClipEdges) VodOrErr() ([]*Vod, error) {
+	if e.loadedTypes[1] {
+		return e.Vod, nil
+	}
+	return nil, &NotLoadedError{edge: "vod"}
+}
+
+// GameOrErr returns the Game value or an error if the edge
+// was not loaded in eager-loading.
+func (e ClipEdges) GameOrErr() ([]*Game, error) {
+	if e.loadedTypes[2] {
+		return e.Game, nil
+	}
+	return nil, &NotLoadedError{edge: "game"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -151,6 +173,16 @@ func (c *Clip) assignValues(columns []string, values []interface{}) error {
 // QueryCreator queries the "creator" edge of the Clip entity.
 func (c *Clip) QueryCreator() *CreatorQuery {
 	return (&ClipClient{config: c.config}).QueryCreator(c)
+}
+
+// QueryVod queries the "vod" edge of the Clip entity.
+func (c *Clip) QueryVod() *VodQuery {
+	return (&ClipClient{config: c.config}).QueryVod(c)
+}
+
+// QueryGame queries the "game" edge of the Clip entity.
+func (c *Clip) QueryGame() *GameQuery {
+	return (&ClipClient{config: c.config}).QueryGame(c)
 }
 
 // Update returns a builder for updating this Clip.

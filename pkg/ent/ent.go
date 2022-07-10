@@ -10,6 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -32,6 +34,8 @@ func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		clip.Table:    clip.ValidColumn,
 		creator.Table: creator.ValidColumn,
+		game.Table:    game.ValidColumn,
+		vod.Table:     vod.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

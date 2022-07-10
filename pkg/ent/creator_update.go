@@ -13,6 +13,7 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
 
 // CreatorUpdate is the builder for updating Creator entities.
@@ -49,6 +50,21 @@ func (cu *CreatorUpdate) AddClips(c ...*Clip) *CreatorUpdate {
 	return cu.AddClipIDs(ids...)
 }
 
+// AddVodIDs adds the "vods" edge to the Vod entity by IDs.
+func (cu *CreatorUpdate) AddVodIDs(ids ...int) *CreatorUpdate {
+	cu.mutation.AddVodIDs(ids...)
+	return cu
+}
+
+// AddVods adds the "vods" edges to the Vod entity.
+func (cu *CreatorUpdate) AddVods(v ...*Vod) *CreatorUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cu.AddVodIDs(ids...)
+}
+
 // Mutation returns the CreatorMutation object of the builder.
 func (cu *CreatorUpdate) Mutation() *CreatorMutation {
 	return cu.mutation
@@ -73,6 +89,27 @@ func (cu *CreatorUpdate) RemoveClips(c ...*Clip) *CreatorUpdate {
 		ids[i] = c[i].ID
 	}
 	return cu.RemoveClipIDs(ids...)
+}
+
+// ClearVods clears all "vods" edges to the Vod entity.
+func (cu *CreatorUpdate) ClearVods() *CreatorUpdate {
+	cu.mutation.ClearVods()
+	return cu
+}
+
+// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
+func (cu *CreatorUpdate) RemoveVodIDs(ids ...int) *CreatorUpdate {
+	cu.mutation.RemoveVodIDs(ids...)
+	return cu
+}
+
+// RemoveVods removes "vods" edges to Vod entities.
+func (cu *CreatorUpdate) RemoveVods(v ...*Vod) *CreatorUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cu.RemoveVodIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -224,6 +261,60 @@ func (cu *CreatorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if cu.mutation.VodsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedVodsIDs(); len(nodes) > 0 && !cu.mutation.VodsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.VodsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{creator.Label}
@@ -264,6 +355,21 @@ func (cuo *CreatorUpdateOne) AddClips(c ...*Clip) *CreatorUpdateOne {
 	return cuo.AddClipIDs(ids...)
 }
 
+// AddVodIDs adds the "vods" edge to the Vod entity by IDs.
+func (cuo *CreatorUpdateOne) AddVodIDs(ids ...int) *CreatorUpdateOne {
+	cuo.mutation.AddVodIDs(ids...)
+	return cuo
+}
+
+// AddVods adds the "vods" edges to the Vod entity.
+func (cuo *CreatorUpdateOne) AddVods(v ...*Vod) *CreatorUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cuo.AddVodIDs(ids...)
+}
+
 // Mutation returns the CreatorMutation object of the builder.
 func (cuo *CreatorUpdateOne) Mutation() *CreatorMutation {
 	return cuo.mutation
@@ -288,6 +394,27 @@ func (cuo *CreatorUpdateOne) RemoveClips(c ...*Clip) *CreatorUpdateOne {
 		ids[i] = c[i].ID
 	}
 	return cuo.RemoveClipIDs(ids...)
+}
+
+// ClearVods clears all "vods" edges to the Vod entity.
+func (cuo *CreatorUpdateOne) ClearVods() *CreatorUpdateOne {
+	cuo.mutation.ClearVods()
+	return cuo
+}
+
+// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
+func (cuo *CreatorUpdateOne) RemoveVodIDs(ids ...int) *CreatorUpdateOne {
+	cuo.mutation.RemoveVodIDs(ids...)
+	return cuo
+}
+
+// RemoveVods removes "vods" edges to Vod entities.
+func (cuo *CreatorUpdateOne) RemoveVods(v ...*Vod) *CreatorUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cuo.RemoveVodIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -455,6 +582,60 @@ func (cuo *CreatorUpdateOne) sqlSave(ctx context.Context) (_node *Creator, err e
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: clip.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.VodsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedVodsIDs(); len(nodes) > 0 && !cuo.mutation.VodsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.VodsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
 				},
 			},
 		}

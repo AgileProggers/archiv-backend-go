@@ -26,9 +26,11 @@ type Creator struct {
 type CreatorEdges struct {
 	// Clips holds the value of the clips edge.
 	Clips []*Clip `json:"clips,omitempty"`
+	// Vods holds the value of the vods edge.
+	Vods []*Vod `json:"vods,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ClipsOrErr returns the Clips value or an error if the edge
@@ -38,6 +40,15 @@ func (e CreatorEdges) ClipsOrErr() ([]*Clip, error) {
 		return e.Clips, nil
 	}
 	return nil, &NotLoadedError{edge: "clips"}
+}
+
+// VodsOrErr returns the Vods value or an error if the edge
+// was not loaded in eager-loading.
+func (e CreatorEdges) VodsOrErr() ([]*Vod, error) {
+	if e.loadedTypes[1] {
+		return e.Vods, nil
+	}
+	return nil, &NotLoadedError{edge: "vods"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -84,6 +95,11 @@ func (c *Creator) assignValues(columns []string, values []interface{}) error {
 // QueryClips queries the "clips" edge of the Creator entity.
 func (c *Creator) QueryClips() *ClipQuery {
 	return (&CreatorClient{config: c.config}).QueryClips(c)
+}
+
+// QueryVods queries the "vods" edge of the Creator entity.
+func (c *Creator) QueryVods() *VodQuery {
+	return (&CreatorClient{config: c.config}).QueryVods(c)
 }
 
 // Update returns a builder for updating this Creator.

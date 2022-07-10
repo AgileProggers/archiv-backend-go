@@ -11,6 +11,8 @@ import (
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -26,6 +28,10 @@ type Client struct {
 	Clip *ClipClient
 	// Creator is the client for interacting with the Creator builders.
 	Creator *CreatorClient
+	// Game is the client for interacting with the Game builders.
+	Game *GameClient
+	// Vod is the client for interacting with the Vod builders.
+	Vod *VodClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -41,6 +47,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Clip = NewClipClient(c.config)
 	c.Creator = NewCreatorClient(c.config)
+	c.Game = NewGameClient(c.config)
+	c.Vod = NewVodClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -76,6 +84,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:  cfg,
 		Clip:    NewClipClient(cfg),
 		Creator: NewCreatorClient(cfg),
+		Game:    NewGameClient(cfg),
+		Vod:     NewVodClient(cfg),
 	}, nil
 }
 
@@ -97,6 +107,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:  cfg,
 		Clip:    NewClipClient(cfg),
 		Creator: NewCreatorClient(cfg),
+		Game:    NewGameClient(cfg),
+		Vod:     NewVodClient(cfg),
 	}, nil
 }
 
@@ -128,6 +140,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Clip.Use(hooks...)
 	c.Creator.Use(hooks...)
+	c.Game.Use(hooks...)
+	c.Vod.Use(hooks...)
 }
 
 // ClipClient is a client for the Clip schema.
@@ -224,6 +238,38 @@ func (c *ClipClient) QueryCreator(cl *Clip) *CreatorQuery {
 			sqlgraph.From(clip.Table, clip.FieldID, id),
 			sqlgraph.To(creator.Table, creator.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, clip.CreatorTable, clip.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVod queries the vod edge of a Clip.
+func (c *ClipClient) QueryVod(cl *Clip) *VodQuery {
+	query := &VodQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := cl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(clip.Table, clip.FieldID, id),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, clip.VodTable, clip.VodPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGame queries the game edge of a Clip.
+func (c *ClipClient) QueryGame(cl *Clip) *GameQuery {
+	query := &GameQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := cl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(clip.Table, clip.FieldID, id),
+			sqlgraph.To(game.Table, game.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, clip.GameTable, clip.GameColumn),
 		)
 		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
 		return fromV, nil
@@ -337,7 +383,283 @@ func (c *CreatorClient) QueryClips(cr *Creator) *ClipQuery {
 	return query
 }
 
+// QueryVods queries the vods edge of a Creator.
+func (c *CreatorClient) QueryVods(cr *Creator) *VodQuery {
+	query := &VodQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := cr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(creator.Table, creator.FieldID, id),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, creator.VodsTable, creator.VodsColumn),
+		)
+		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *CreatorClient) Hooks() []Hook {
 	return c.hooks.Creator
+}
+
+// GameClient is a client for the Game schema.
+type GameClient struct {
+	config
+}
+
+// NewGameClient returns a client for the Game from the given config.
+func NewGameClient(c config) *GameClient {
+	return &GameClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `game.Hooks(f(g(h())))`.
+func (c *GameClient) Use(hooks ...Hook) {
+	c.hooks.Game = append(c.hooks.Game, hooks...)
+}
+
+// Create returns a create builder for Game.
+func (c *GameClient) Create() *GameCreate {
+	mutation := newGameMutation(c.config, OpCreate)
+	return &GameCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Game entities.
+func (c *GameClient) CreateBulk(builders ...*GameCreate) *GameCreateBulk {
+	return &GameCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Game.
+func (c *GameClient) Update() *GameUpdate {
+	mutation := newGameMutation(c.config, OpUpdate)
+	return &GameUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GameClient) UpdateOne(ga *Game) *GameUpdateOne {
+	mutation := newGameMutation(c.config, OpUpdateOne, withGame(ga))
+	return &GameUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GameClient) UpdateOneID(id int) *GameUpdateOne {
+	mutation := newGameMutation(c.config, OpUpdateOne, withGameID(id))
+	return &GameUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Game.
+func (c *GameClient) Delete() *GameDelete {
+	mutation := newGameMutation(c.config, OpDelete)
+	return &GameDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *GameClient) DeleteOne(ga *Game) *GameDeleteOne {
+	return c.DeleteOneID(ga.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *GameClient) DeleteOneID(id int) *GameDeleteOne {
+	builder := c.Delete().Where(game.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GameDeleteOne{builder}
+}
+
+// Query returns a query builder for Game.
+func (c *GameClient) Query() *GameQuery {
+	return &GameQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Game entity by its id.
+func (c *GameClient) Get(ctx context.Context, id int) (*Game, error) {
+	return c.Query().Where(game.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GameClient) GetX(ctx context.Context, id int) *Game {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryClip queries the clip edge of a Game.
+func (c *GameClient) QueryClip(ga *Game) *ClipQuery {
+	query := &ClipQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ga.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(game.Table, game.FieldID, id),
+			sqlgraph.To(clip.Table, clip.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, game.ClipTable, game.ClipColumn),
+		)
+		fromV = sqlgraph.Neighbors(ga.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVod queries the vod edge of a Game.
+func (c *GameClient) QueryVod(ga *Game) *VodQuery {
+	query := &VodQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ga.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(game.Table, game.FieldID, id),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, game.VodTable, game.VodColumn),
+		)
+		fromV = sqlgraph.Neighbors(ga.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *GameClient) Hooks() []Hook {
+	return c.hooks.Game
+}
+
+// VodClient is a client for the Vod schema.
+type VodClient struct {
+	config
+}
+
+// NewVodClient returns a client for the Vod from the given config.
+func NewVodClient(c config) *VodClient {
+	return &VodClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `vod.Hooks(f(g(h())))`.
+func (c *VodClient) Use(hooks ...Hook) {
+	c.hooks.Vod = append(c.hooks.Vod, hooks...)
+}
+
+// Create returns a create builder for Vod.
+func (c *VodClient) Create() *VodCreate {
+	mutation := newVodMutation(c.config, OpCreate)
+	return &VodCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Vod entities.
+func (c *VodClient) CreateBulk(builders ...*VodCreate) *VodCreateBulk {
+	return &VodCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Vod.
+func (c *VodClient) Update() *VodUpdate {
+	mutation := newVodMutation(c.config, OpUpdate)
+	return &VodUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VodClient) UpdateOne(v *Vod) *VodUpdateOne {
+	mutation := newVodMutation(c.config, OpUpdateOne, withVod(v))
+	return &VodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VodClient) UpdateOneID(id int) *VodUpdateOne {
+	mutation := newVodMutation(c.config, OpUpdateOne, withVodID(id))
+	return &VodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Vod.
+func (c *VodClient) Delete() *VodDelete {
+	mutation := newVodMutation(c.config, OpDelete)
+	return &VodDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *VodClient) DeleteOne(v *Vod) *VodDeleteOne {
+	return c.DeleteOneID(v.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *VodClient) DeleteOneID(id int) *VodDeleteOne {
+	builder := c.Delete().Where(vod.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VodDeleteOne{builder}
+}
+
+// Query returns a query builder for Vod.
+func (c *VodClient) Query() *VodQuery {
+	return &VodQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Vod entity by its id.
+func (c *VodClient) Get(ctx context.Context, id int) (*Vod, error) {
+	return c.Query().Where(vod.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VodClient) GetX(ctx context.Context, id int) *Vod {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreator queries the creator edge of a Vod.
+func (c *VodClient) QueryCreator(v *Vod) *CreatorQuery {
+	query := &CreatorQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, id),
+			sqlgraph.To(creator.Table, creator.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, vod.CreatorTable, vod.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryClips queries the clips edge of a Vod.
+func (c *VodClient) QueryClips(v *Vod) *ClipQuery {
+	query := &ClipQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, id),
+			sqlgraph.To(clip.Table, clip.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, vod.ClipsTable, vod.ClipsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGame queries the game edge of a Vod.
+func (c *VodClient) QueryGame(v *Vod) *GameQuery {
+	query := &GameQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, id),
+			sqlgraph.To(game.Table, game.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vod.GameTable, vod.GameColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VodClient) Hooks() []Hook {
+	return c.hooks.Vod
 }

@@ -36,5 +36,8 @@ func (Clip) Edges() []ent.Edge {
 		edge.From("creator", Creator.Type).
 			Ref("clips").
 			Unique(),
+		edge.From("vod", Vod.Type).
+			Ref("clips"),
+		edge.To("game", Game.Type),
 	}
 }

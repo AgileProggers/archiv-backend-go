@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
 
 // ClipCreate is the builder for creating a Clip entity.
@@ -80,6 +82,36 @@ func (cc *ClipCreate) SetNillableCreatorID(id *int) *ClipCreate {
 // SetCreator sets the "creator" edge to the Creator entity.
 func (cc *ClipCreate) SetCreator(c *Creator) *ClipCreate {
 	return cc.SetCreatorID(c.ID)
+}
+
+// AddVodIDs adds the "vod" edge to the Vod entity by IDs.
+func (cc *ClipCreate) AddVodIDs(ids ...int) *ClipCreate {
+	cc.mutation.AddVodIDs(ids...)
+	return cc
+}
+
+// AddVod adds the "vod" edges to the Vod entity.
+func (cc *ClipCreate) AddVod(v ...*Vod) *ClipCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cc.AddVodIDs(ids...)
+}
+
+// AddGameIDs adds the "game" edge to the Game entity by IDs.
+func (cc *ClipCreate) AddGameIDs(ids ...int) *ClipCreate {
+	cc.mutation.AddGameIDs(ids...)
+	return cc
+}
+
+// AddGame adds the "game" edges to the Game entity.
+func (cc *ClipCreate) AddGame(g ...*Game) *ClipCreate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cc.AddGameIDs(ids...)
 }
 
 // Mutation returns the ClipMutation object of the builder.
@@ -289,6 +321,44 @@ func (cc *ClipCreate) createSpec() (*Clip, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.creator_clips = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.VodIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.GameIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

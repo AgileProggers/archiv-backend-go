@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
 
 // CreatorCreate is the builder for creating a Creator entity.
@@ -39,6 +40,21 @@ func (cc *CreatorCreate) AddClips(c ...*Clip) *CreatorCreate {
 		ids[i] = c[i].ID
 	}
 	return cc.AddClipIDs(ids...)
+}
+
+// AddVodIDs adds the "vods" edge to the Vod entity by IDs.
+func (cc *CreatorCreate) AddVodIDs(ids ...int) *CreatorCreate {
+	cc.mutation.AddVodIDs(ids...)
+	return cc
+}
+
+// AddVods adds the "vods" edges to the Vod entity.
+func (cc *CreatorCreate) AddVods(v ...*Vod) *CreatorCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cc.AddVodIDs(ids...)
 }
 
 // Mutation returns the CreatorMutation object of the builder.
@@ -165,6 +181,25 @@ func (cc *CreatorCreate) createSpec() (*Creator, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: clip.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.VodsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   creator.VodsTable,
+			Columns: []string{creator.VodsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
 				},
 			},
 		}

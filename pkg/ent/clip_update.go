@@ -13,7 +13,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 )
 
 // ClipUpdate is the builder for updating Clip entities.
@@ -111,6 +113,36 @@ func (cu *ClipUpdate) SetCreator(c *Creator) *ClipUpdate {
 	return cu.SetCreatorID(c.ID)
 }
 
+// AddVodIDs adds the "vod" edge to the Vod entity by IDs.
+func (cu *ClipUpdate) AddVodIDs(ids ...int) *ClipUpdate {
+	cu.mutation.AddVodIDs(ids...)
+	return cu
+}
+
+// AddVod adds the "vod" edges to the Vod entity.
+func (cu *ClipUpdate) AddVod(v ...*Vod) *ClipUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cu.AddVodIDs(ids...)
+}
+
+// AddGameIDs adds the "game" edge to the Game entity by IDs.
+func (cu *ClipUpdate) AddGameIDs(ids ...int) *ClipUpdate {
+	cu.mutation.AddGameIDs(ids...)
+	return cu
+}
+
+// AddGame adds the "game" edges to the Game entity.
+func (cu *ClipUpdate) AddGame(g ...*Game) *ClipUpdate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cu.AddGameIDs(ids...)
+}
+
 // Mutation returns the ClipMutation object of the builder.
 func (cu *ClipUpdate) Mutation() *ClipMutation {
 	return cu.mutation
@@ -120,6 +152,48 @@ func (cu *ClipUpdate) Mutation() *ClipMutation {
 func (cu *ClipUpdate) ClearCreator() *ClipUpdate {
 	cu.mutation.ClearCreator()
 	return cu
+}
+
+// ClearVod clears all "vod" edges to the Vod entity.
+func (cu *ClipUpdate) ClearVod() *ClipUpdate {
+	cu.mutation.ClearVod()
+	return cu
+}
+
+// RemoveVodIDs removes the "vod" edge to Vod entities by IDs.
+func (cu *ClipUpdate) RemoveVodIDs(ids ...int) *ClipUpdate {
+	cu.mutation.RemoveVodIDs(ids...)
+	return cu
+}
+
+// RemoveVod removes "vod" edges to Vod entities.
+func (cu *ClipUpdate) RemoveVod(v ...*Vod) *ClipUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cu.RemoveVodIDs(ids...)
+}
+
+// ClearGame clears all "game" edges to the Game entity.
+func (cu *ClipUpdate) ClearGame() *ClipUpdate {
+	cu.mutation.ClearGame()
+	return cu
+}
+
+// RemoveGameIDs removes the "game" edge to Game entities by IDs.
+func (cu *ClipUpdate) RemoveGameIDs(ids ...int) *ClipUpdate {
+	cu.mutation.RemoveGameIDs(ids...)
+	return cu
+}
+
+// RemoveGame removes "game" edges to Game entities.
+func (cu *ClipUpdate) RemoveGame(g ...*Game) *ClipUpdate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cu.RemoveGameIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -325,6 +399,114 @@ func (cu *ClipUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if cu.mutation.VodCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedVodIDs(); len(nodes) > 0 && !cu.mutation.VodCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.VodIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cu.mutation.GameCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedGameIDs(); len(nodes) > 0 && !cu.mutation.GameCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.GameIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{clip.Label}
@@ -426,6 +608,36 @@ func (cuo *ClipUpdateOne) SetCreator(c *Creator) *ClipUpdateOne {
 	return cuo.SetCreatorID(c.ID)
 }
 
+// AddVodIDs adds the "vod" edge to the Vod entity by IDs.
+func (cuo *ClipUpdateOne) AddVodIDs(ids ...int) *ClipUpdateOne {
+	cuo.mutation.AddVodIDs(ids...)
+	return cuo
+}
+
+// AddVod adds the "vod" edges to the Vod entity.
+func (cuo *ClipUpdateOne) AddVod(v ...*Vod) *ClipUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cuo.AddVodIDs(ids...)
+}
+
+// AddGameIDs adds the "game" edge to the Game entity by IDs.
+func (cuo *ClipUpdateOne) AddGameIDs(ids ...int) *ClipUpdateOne {
+	cuo.mutation.AddGameIDs(ids...)
+	return cuo
+}
+
+// AddGame adds the "game" edges to the Game entity.
+func (cuo *ClipUpdateOne) AddGame(g ...*Game) *ClipUpdateOne {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cuo.AddGameIDs(ids...)
+}
+
 // Mutation returns the ClipMutation object of the builder.
 func (cuo *ClipUpdateOne) Mutation() *ClipMutation {
 	return cuo.mutation
@@ -435,6 +647,48 @@ func (cuo *ClipUpdateOne) Mutation() *ClipMutation {
 func (cuo *ClipUpdateOne) ClearCreator() *ClipUpdateOne {
 	cuo.mutation.ClearCreator()
 	return cuo
+}
+
+// ClearVod clears all "vod" edges to the Vod entity.
+func (cuo *ClipUpdateOne) ClearVod() *ClipUpdateOne {
+	cuo.mutation.ClearVod()
+	return cuo
+}
+
+// RemoveVodIDs removes the "vod" edge to Vod entities by IDs.
+func (cuo *ClipUpdateOne) RemoveVodIDs(ids ...int) *ClipUpdateOne {
+	cuo.mutation.RemoveVodIDs(ids...)
+	return cuo
+}
+
+// RemoveVod removes "vod" edges to Vod entities.
+func (cuo *ClipUpdateOne) RemoveVod(v ...*Vod) *ClipUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return cuo.RemoveVodIDs(ids...)
+}
+
+// ClearGame clears all "game" edges to the Game entity.
+func (cuo *ClipUpdateOne) ClearGame() *ClipUpdateOne {
+	cuo.mutation.ClearGame()
+	return cuo
+}
+
+// RemoveGameIDs removes the "game" edge to Game entities by IDs.
+func (cuo *ClipUpdateOne) RemoveGameIDs(ids ...int) *ClipUpdateOne {
+	cuo.mutation.RemoveGameIDs(ids...)
+	return cuo
+}
+
+// RemoveGame removes "game" edges to Game entities.
+func (cuo *ClipUpdateOne) RemoveGame(g ...*Game) *ClipUpdateOne {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return cuo.RemoveGameIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -656,6 +910,114 @@ func (cuo *ClipUpdateOne) sqlSave(ctx context.Context) (_node *Clip, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: creator.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.VodCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedVodIDs(); len(nodes) > 0 && !cuo.mutation.VodCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.VodIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   clip.VodTable,
+			Columns: clip.VodPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.GameCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedGameIDs(); len(nodes) > 0 && !cuo.mutation.GameCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.GameIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   clip.GameTable,
+			Columns: []string{clip.GameColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: game.FieldID,
 				},
 			},
 		}

@@ -16,6 +16,10 @@ type Tx struct {
 	Clip *ClipClient
 	// Creator is the client for interacting with the Creator builders.
 	Creator *CreatorClient
+	// Game is the client for interacting with the Game builders.
+	Game *GameClient
+	// Vod is the client for interacting with the Vod builders.
+	Vod *VodClient
 
 	// lazily loaded.
 	client     *Client
@@ -153,6 +157,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Clip = NewClipClient(tx.config)
 	tx.Creator = NewCreatorClient(tx.config)
+	tx.Game = NewGameClient(tx.config)
+	tx.Vod = NewVodClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

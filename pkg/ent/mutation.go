@@ -11,7 +11,9 @@ import (
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/predicate"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/vod"
 
 	"entgo.io/ent"
 )
@@ -27,6 +29,8 @@ const (
 	// Node types.
 	TypeClip    = "Clip"
 	TypeCreator = "Creator"
+	TypeGame    = "Game"
+	TypeVod     = "Vod"
 )
 
 // ClipMutation represents an operation that mutates the Clip nodes in the graph.
@@ -48,6 +52,12 @@ type ClipMutation struct {
 	clearedFields  map[string]struct{}
 	creator        *int
 	clearedcreator bool
+	vod            map[int]struct{}
+	removedvod     map[int]struct{}
+	clearedvod     bool
+	game           map[int]struct{}
+	removedgame    map[int]struct{}
+	clearedgame    bool
 	done           bool
 	oldValue       func(context.Context) (*Clip, error)
 	predicates     []predicate.Clip
@@ -502,6 +512,114 @@ func (m *ClipMutation) ResetCreator() {
 	m.clearedcreator = false
 }
 
+// AddVodIDs adds the "vod" edge to the Vod entity by ids.
+func (m *ClipMutation) AddVodIDs(ids ...int) {
+	if m.vod == nil {
+		m.vod = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.vod[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVod clears the "vod" edge to the Vod entity.
+func (m *ClipMutation) ClearVod() {
+	m.clearedvod = true
+}
+
+// VodCleared reports if the "vod" edge to the Vod entity was cleared.
+func (m *ClipMutation) VodCleared() bool {
+	return m.clearedvod
+}
+
+// RemoveVodIDs removes the "vod" edge to the Vod entity by IDs.
+func (m *ClipMutation) RemoveVodIDs(ids ...int) {
+	if m.removedvod == nil {
+		m.removedvod = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.vod, ids[i])
+		m.removedvod[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVod returns the removed IDs of the "vod" edge to the Vod entity.
+func (m *ClipMutation) RemovedVodIDs() (ids []int) {
+	for id := range m.removedvod {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VodIDs returns the "vod" edge IDs in the mutation.
+func (m *ClipMutation) VodIDs() (ids []int) {
+	for id := range m.vod {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVod resets all changes to the "vod" edge.
+func (m *ClipMutation) ResetVod() {
+	m.vod = nil
+	m.clearedvod = false
+	m.removedvod = nil
+}
+
+// AddGameIDs adds the "game" edge to the Game entity by ids.
+func (m *ClipMutation) AddGameIDs(ids ...int) {
+	if m.game == nil {
+		m.game = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.game[ids[i]] = struct{}{}
+	}
+}
+
+// ClearGame clears the "game" edge to the Game entity.
+func (m *ClipMutation) ClearGame() {
+	m.clearedgame = true
+}
+
+// GameCleared reports if the "game" edge to the Game entity was cleared.
+func (m *ClipMutation) GameCleared() bool {
+	return m.clearedgame
+}
+
+// RemoveGameIDs removes the "game" edge to the Game entity by IDs.
+func (m *ClipMutation) RemoveGameIDs(ids ...int) {
+	if m.removedgame == nil {
+		m.removedgame = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.game, ids[i])
+		m.removedgame[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedGame returns the removed IDs of the "game" edge to the Game entity.
+func (m *ClipMutation) RemovedGameIDs() (ids []int) {
+	for id := range m.removedgame {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// GameIDs returns the "game" edge IDs in the mutation.
+func (m *ClipMutation) GameIDs() (ids []int) {
+	for id := range m.game {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetGame resets all changes to the "game" edge.
+func (m *ClipMutation) ResetGame() {
+	m.game = nil
+	m.clearedgame = false
+	m.removedgame = nil
+}
+
 // Where appends a list predicates to the ClipMutation builder.
 func (m *ClipMutation) Where(ps ...predicate.Clip) {
 	m.predicates = append(m.predicates, ps...)
@@ -761,9 +879,15 @@ func (m *ClipMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ClipMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.creator != nil {
 		edges = append(edges, clip.EdgeCreator)
+	}
+	if m.vod != nil {
+		edges = append(edges, clip.EdgeVod)
+	}
+	if m.game != nil {
+		edges = append(edges, clip.EdgeGame)
 	}
 	return edges
 }
@@ -776,13 +900,31 @@ func (m *ClipMutation) AddedIDs(name string) []ent.Value {
 		if id := m.creator; id != nil {
 			return []ent.Value{*id}
 		}
+	case clip.EdgeVod:
+		ids := make([]ent.Value, 0, len(m.vod))
+		for id := range m.vod {
+			ids = append(ids, id)
+		}
+		return ids
+	case clip.EdgeGame:
+		ids := make([]ent.Value, 0, len(m.game))
+		for id := range m.game {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ClipMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
+	if m.removedvod != nil {
+		edges = append(edges, clip.EdgeVod)
+	}
+	if m.removedgame != nil {
+		edges = append(edges, clip.EdgeGame)
+	}
 	return edges
 }
 
@@ -790,15 +932,33 @@ func (m *ClipMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *ClipMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case clip.EdgeVod:
+		ids := make([]ent.Value, 0, len(m.removedvod))
+		for id := range m.removedvod {
+			ids = append(ids, id)
+		}
+		return ids
+	case clip.EdgeGame:
+		ids := make([]ent.Value, 0, len(m.removedgame))
+		for id := range m.removedgame {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ClipMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.clearedcreator {
 		edges = append(edges, clip.EdgeCreator)
+	}
+	if m.clearedvod {
+		edges = append(edges, clip.EdgeVod)
+	}
+	if m.clearedgame {
+		edges = append(edges, clip.EdgeGame)
 	}
 	return edges
 }
@@ -809,6 +969,10 @@ func (m *ClipMutation) EdgeCleared(name string) bool {
 	switch name {
 	case clip.EdgeCreator:
 		return m.clearedcreator
+	case clip.EdgeVod:
+		return m.clearedvod
+	case clip.EdgeGame:
+		return m.clearedgame
 	}
 	return false
 }
@@ -831,6 +995,12 @@ func (m *ClipMutation) ResetEdge(name string) error {
 	case clip.EdgeCreator:
 		m.ResetCreator()
 		return nil
+	case clip.EdgeVod:
+		m.ResetVod()
+		return nil
+	case clip.EdgeGame:
+		m.ResetGame()
+		return nil
 	}
 	return fmt.Errorf("unknown Clip edge %s", name)
 }
@@ -846,6 +1016,9 @@ type CreatorMutation struct {
 	clips         map[int]struct{}
 	removedclips  map[int]struct{}
 	clearedclips  bool
+	vods          map[int]struct{}
+	removedvods   map[int]struct{}
+	clearedvods   bool
 	done          bool
 	oldValue      func(context.Context) (*Creator, error)
 	predicates    []predicate.Creator
@@ -1039,6 +1212,60 @@ func (m *CreatorMutation) ResetClips() {
 	m.removedclips = nil
 }
 
+// AddVodIDs adds the "vods" edge to the Vod entity by ids.
+func (m *CreatorMutation) AddVodIDs(ids ...int) {
+	if m.vods == nil {
+		m.vods = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.vods[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVods clears the "vods" edge to the Vod entity.
+func (m *CreatorMutation) ClearVods() {
+	m.clearedvods = true
+}
+
+// VodsCleared reports if the "vods" edge to the Vod entity was cleared.
+func (m *CreatorMutation) VodsCleared() bool {
+	return m.clearedvods
+}
+
+// RemoveVodIDs removes the "vods" edge to the Vod entity by IDs.
+func (m *CreatorMutation) RemoveVodIDs(ids ...int) {
+	if m.removedvods == nil {
+		m.removedvods = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.vods, ids[i])
+		m.removedvods[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVods returns the removed IDs of the "vods" edge to the Vod entity.
+func (m *CreatorMutation) RemovedVodsIDs() (ids []int) {
+	for id := range m.removedvods {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VodsIDs returns the "vods" edge IDs in the mutation.
+func (m *CreatorMutation) VodsIDs() (ids []int) {
+	for id := range m.vods {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVods resets all changes to the "vods" edge.
+func (m *CreatorMutation) ResetVods() {
+	m.vods = nil
+	m.clearedvods = false
+	m.removedvods = nil
+}
+
 // Where appends a list predicates to the CreatorMutation builder.
 func (m *CreatorMutation) Where(ps ...predicate.Creator) {
 	m.predicates = append(m.predicates, ps...)
@@ -1157,9 +1384,12 @@ func (m *CreatorMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CreatorMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clips != nil {
 		edges = append(edges, creator.EdgeClips)
+	}
+	if m.vods != nil {
+		edges = append(edges, creator.EdgeVods)
 	}
 	return edges
 }
@@ -1174,15 +1404,24 @@ func (m *CreatorMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case creator.EdgeVods:
+		ids := make([]ent.Value, 0, len(m.vods))
+		for id := range m.vods {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CreatorMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedclips != nil {
 		edges = append(edges, creator.EdgeClips)
+	}
+	if m.removedvods != nil {
+		edges = append(edges, creator.EdgeVods)
 	}
 	return edges
 }
@@ -1197,15 +1436,24 @@ func (m *CreatorMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case creator.EdgeVods:
+		ids := make([]ent.Value, 0, len(m.removedvods))
+		for id := range m.removedvods {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CreatorMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedclips {
 		edges = append(edges, creator.EdgeClips)
+	}
+	if m.clearedvods {
+		edges = append(edges, creator.EdgeVods)
 	}
 	return edges
 }
@@ -1216,6 +1464,8 @@ func (m *CreatorMutation) EdgeCleared(name string) bool {
 	switch name {
 	case creator.EdgeClips:
 		return m.clearedclips
+	case creator.EdgeVods:
+		return m.clearedvods
 	}
 	return false
 }
@@ -1235,6 +1485,1618 @@ func (m *CreatorMutation) ResetEdge(name string) error {
 	case creator.EdgeClips:
 		m.ResetClips()
 		return nil
+	case creator.EdgeVods:
+		m.ResetVods()
+		return nil
 	}
 	return fmt.Errorf("unknown Creator edge %s", name)
+}
+
+// GameMutation represents an operation that mutates the Game nodes in the graph.
+type GameMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	game_id       *int
+	addgame_id    *int
+	name          *string
+	box_art       *string
+	clearedFields map[string]struct{}
+	clip          *int
+	clearedclip   bool
+	vod           *int
+	clearedvod    bool
+	done          bool
+	oldValue      func(context.Context) (*Game, error)
+	predicates    []predicate.Game
+}
+
+var _ ent.Mutation = (*GameMutation)(nil)
+
+// gameOption allows management of the mutation configuration using functional options.
+type gameOption func(*GameMutation)
+
+// newGameMutation creates new mutation for the Game entity.
+func newGameMutation(c config, op Op, opts ...gameOption) *GameMutation {
+	m := &GameMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGame,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGameID sets the ID field of the mutation.
+func withGameID(id int) gameOption {
+	return func(m *GameMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Game
+		)
+		m.oldValue = func(ctx context.Context) (*Game, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Game.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGame sets the old Game of the mutation.
+func withGame(node *Game) gameOption {
+	return func(m *GameMutation) {
+		m.oldValue = func(context.Context) (*Game, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GameMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GameMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GameMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GameMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Game.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGameID sets the "game_id" field.
+func (m *GameMutation) SetGameID(i int) {
+	m.game_id = &i
+	m.addgame_id = nil
+}
+
+// GameID returns the value of the "game_id" field in the mutation.
+func (m *GameMutation) GameID() (r int, exists bool) {
+	v := m.game_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameID returns the old "game_id" field's value of the Game entity.
+// If the Game object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameMutation) OldGameID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameID: %w", err)
+	}
+	return oldValue.GameID, nil
+}
+
+// AddGameID adds i to the "game_id" field.
+func (m *GameMutation) AddGameID(i int) {
+	if m.addgame_id != nil {
+		*m.addgame_id += i
+	} else {
+		m.addgame_id = &i
+	}
+}
+
+// AddedGameID returns the value that was added to the "game_id" field in this mutation.
+func (m *GameMutation) AddedGameID() (r int, exists bool) {
+	v := m.addgame_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGameID resets all changes to the "game_id" field.
+func (m *GameMutation) ResetGameID() {
+	m.game_id = nil
+	m.addgame_id = nil
+}
+
+// SetName sets the "name" field.
+func (m *GameMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *GameMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Game entity.
+// If the Game object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *GameMutation) ResetName() {
+	m.name = nil
+}
+
+// SetBoxArt sets the "box_art" field.
+func (m *GameMutation) SetBoxArt(s string) {
+	m.box_art = &s
+}
+
+// BoxArt returns the value of the "box_art" field in the mutation.
+func (m *GameMutation) BoxArt() (r string, exists bool) {
+	v := m.box_art
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBoxArt returns the old "box_art" field's value of the Game entity.
+// If the Game object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameMutation) OldBoxArt(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBoxArt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBoxArt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBoxArt: %w", err)
+	}
+	return oldValue.BoxArt, nil
+}
+
+// ResetBoxArt resets all changes to the "box_art" field.
+func (m *GameMutation) ResetBoxArt() {
+	m.box_art = nil
+}
+
+// SetClipID sets the "clip" edge to the Clip entity by id.
+func (m *GameMutation) SetClipID(id int) {
+	m.clip = &id
+}
+
+// ClearClip clears the "clip" edge to the Clip entity.
+func (m *GameMutation) ClearClip() {
+	m.clearedclip = true
+}
+
+// ClipCleared reports if the "clip" edge to the Clip entity was cleared.
+func (m *GameMutation) ClipCleared() bool {
+	return m.clearedclip
+}
+
+// ClipID returns the "clip" edge ID in the mutation.
+func (m *GameMutation) ClipID() (id int, exists bool) {
+	if m.clip != nil {
+		return *m.clip, true
+	}
+	return
+}
+
+// ClipIDs returns the "clip" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ClipID instead. It exists only for internal usage by the builders.
+func (m *GameMutation) ClipIDs() (ids []int) {
+	if id := m.clip; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetClip resets all changes to the "clip" edge.
+func (m *GameMutation) ResetClip() {
+	m.clip = nil
+	m.clearedclip = false
+}
+
+// SetVodID sets the "vod" edge to the Vod entity by id.
+func (m *GameMutation) SetVodID(id int) {
+	m.vod = &id
+}
+
+// ClearVod clears the "vod" edge to the Vod entity.
+func (m *GameMutation) ClearVod() {
+	m.clearedvod = true
+}
+
+// VodCleared reports if the "vod" edge to the Vod entity was cleared.
+func (m *GameMutation) VodCleared() bool {
+	return m.clearedvod
+}
+
+// VodID returns the "vod" edge ID in the mutation.
+func (m *GameMutation) VodID() (id int, exists bool) {
+	if m.vod != nil {
+		return *m.vod, true
+	}
+	return
+}
+
+// VodIDs returns the "vod" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VodID instead. It exists only for internal usage by the builders.
+func (m *GameMutation) VodIDs() (ids []int) {
+	if id := m.vod; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVod resets all changes to the "vod" edge.
+func (m *GameMutation) ResetVod() {
+	m.vod = nil
+	m.clearedvod = false
+}
+
+// Where appends a list predicates to the GameMutation builder.
+func (m *GameMutation) Where(ps ...predicate.Game) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *GameMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Game).
+func (m *GameMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GameMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.game_id != nil {
+		fields = append(fields, game.FieldGameID)
+	}
+	if m.name != nil {
+		fields = append(fields, game.FieldName)
+	}
+	if m.box_art != nil {
+		fields = append(fields, game.FieldBoxArt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GameMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case game.FieldGameID:
+		return m.GameID()
+	case game.FieldName:
+		return m.Name()
+	case game.FieldBoxArt:
+		return m.BoxArt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GameMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case game.FieldGameID:
+		return m.OldGameID(ctx)
+	case game.FieldName:
+		return m.OldName(ctx)
+	case game.FieldBoxArt:
+		return m.OldBoxArt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Game field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GameMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case game.FieldGameID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameID(v)
+		return nil
+	case game.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case game.FieldBoxArt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBoxArt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Game field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GameMutation) AddedFields() []string {
+	var fields []string
+	if m.addgame_id != nil {
+		fields = append(fields, game.FieldGameID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GameMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case game.FieldGameID:
+		return m.AddedGameID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GameMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case game.FieldGameID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGameID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Game numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GameMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GameMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GameMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Game nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GameMutation) ResetField(name string) error {
+	switch name {
+	case game.FieldGameID:
+		m.ResetGameID()
+		return nil
+	case game.FieldName:
+		m.ResetName()
+		return nil
+	case game.FieldBoxArt:
+		m.ResetBoxArt()
+		return nil
+	}
+	return fmt.Errorf("unknown Game field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GameMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clip != nil {
+		edges = append(edges, game.EdgeClip)
+	}
+	if m.vod != nil {
+		edges = append(edges, game.EdgeVod)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GameMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case game.EdgeClip:
+		if id := m.clip; id != nil {
+			return []ent.Value{*id}
+		}
+	case game.EdgeVod:
+		if id := m.vod; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GameMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GameMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GameMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedclip {
+		edges = append(edges, game.EdgeClip)
+	}
+	if m.clearedvod {
+		edges = append(edges, game.EdgeVod)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GameMutation) EdgeCleared(name string) bool {
+	switch name {
+	case game.EdgeClip:
+		return m.clearedclip
+	case game.EdgeVod:
+		return m.clearedvod
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GameMutation) ClearEdge(name string) error {
+	switch name {
+	case game.EdgeClip:
+		m.ClearClip()
+		return nil
+	case game.EdgeVod:
+		m.ClearVod()
+		return nil
+	}
+	return fmt.Errorf("unknown Game unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GameMutation) ResetEdge(name string) error {
+	switch name {
+	case game.EdgeClip:
+		m.ResetClip()
+		return nil
+	case game.EdgeVod:
+		m.ResetVod()
+		return nil
+	}
+	return fmt.Errorf("unknown Game edge %s", name)
+}
+
+// VodMutation represents an operation that mutates the Vod nodes in the graph.
+type VodMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	title          *string
+	duration       *int
+	addduration    *int
+	date           *time.Time
+	filename       *string
+	resolution     *string
+	fps            *float64
+	addfps         *float64
+	size           *int
+	addsize        *int
+	publish        *bool
+	clearedFields  map[string]struct{}
+	creator        *int
+	clearedcreator bool
+	clips          map[int]struct{}
+	removedclips   map[int]struct{}
+	clearedclips   bool
+	game           map[int]struct{}
+	removedgame    map[int]struct{}
+	clearedgame    bool
+	done           bool
+	oldValue       func(context.Context) (*Vod, error)
+	predicates     []predicate.Vod
+}
+
+var _ ent.Mutation = (*VodMutation)(nil)
+
+// vodOption allows management of the mutation configuration using functional options.
+type vodOption func(*VodMutation)
+
+// newVodMutation creates new mutation for the Vod entity.
+func newVodMutation(c config, op Op, opts ...vodOption) *VodMutation {
+	m := &VodMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeVod,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withVodID sets the ID field of the mutation.
+func withVodID(id int) vodOption {
+	return func(m *VodMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Vod
+		)
+		m.oldValue = func(ctx context.Context) (*Vod, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Vod.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withVod sets the old Vod of the mutation.
+func withVod(node *Vod) vodOption {
+	return func(m *VodMutation) {
+		m.oldValue = func(context.Context) (*Vod, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m VodMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m VodMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *VodMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *VodMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Vod.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTitle sets the "title" field.
+func (m *VodMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *VodMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *VodMutation) ResetTitle() {
+	m.title = nil
+}
+
+// SetDuration sets the "duration" field.
+func (m *VodMutation) SetDuration(i int) {
+	m.duration = &i
+	m.addduration = nil
+}
+
+// Duration returns the value of the "duration" field in the mutation.
+func (m *VodMutation) Duration() (r int, exists bool) {
+	v := m.duration
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDuration returns the old "duration" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldDuration(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDuration is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDuration requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDuration: %w", err)
+	}
+	return oldValue.Duration, nil
+}
+
+// AddDuration adds i to the "duration" field.
+func (m *VodMutation) AddDuration(i int) {
+	if m.addduration != nil {
+		*m.addduration += i
+	} else {
+		m.addduration = &i
+	}
+}
+
+// AddedDuration returns the value that was added to the "duration" field in this mutation.
+func (m *VodMutation) AddedDuration() (r int, exists bool) {
+	v := m.addduration
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDuration resets all changes to the "duration" field.
+func (m *VodMutation) ResetDuration() {
+	m.duration = nil
+	m.addduration = nil
+}
+
+// SetDate sets the "date" field.
+func (m *VodMutation) SetDate(t time.Time) {
+	m.date = &t
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *VodMutation) Date() (r time.Time, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *VodMutation) ResetDate() {
+	m.date = nil
+}
+
+// SetFilename sets the "filename" field.
+func (m *VodMutation) SetFilename(s string) {
+	m.filename = &s
+}
+
+// Filename returns the value of the "filename" field in the mutation.
+func (m *VodMutation) Filename() (r string, exists bool) {
+	v := m.filename
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFilename returns the old "filename" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldFilename(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFilename is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFilename requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFilename: %w", err)
+	}
+	return oldValue.Filename, nil
+}
+
+// ResetFilename resets all changes to the "filename" field.
+func (m *VodMutation) ResetFilename() {
+	m.filename = nil
+}
+
+// SetResolution sets the "resolution" field.
+func (m *VodMutation) SetResolution(s string) {
+	m.resolution = &s
+}
+
+// Resolution returns the value of the "resolution" field in the mutation.
+func (m *VodMutation) Resolution() (r string, exists bool) {
+	v := m.resolution
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolution returns the old "resolution" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldResolution(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolution is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolution requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolution: %w", err)
+	}
+	return oldValue.Resolution, nil
+}
+
+// ResetResolution resets all changes to the "resolution" field.
+func (m *VodMutation) ResetResolution() {
+	m.resolution = nil
+}
+
+// SetFps sets the "fps" field.
+func (m *VodMutation) SetFps(f float64) {
+	m.fps = &f
+	m.addfps = nil
+}
+
+// Fps returns the value of the "fps" field in the mutation.
+func (m *VodMutation) Fps() (r float64, exists bool) {
+	v := m.fps
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFps returns the old "fps" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldFps(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFps is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFps requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFps: %w", err)
+	}
+	return oldValue.Fps, nil
+}
+
+// AddFps adds f to the "fps" field.
+func (m *VodMutation) AddFps(f float64) {
+	if m.addfps != nil {
+		*m.addfps += f
+	} else {
+		m.addfps = &f
+	}
+}
+
+// AddedFps returns the value that was added to the "fps" field in this mutation.
+func (m *VodMutation) AddedFps() (r float64, exists bool) {
+	v := m.addfps
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFps resets all changes to the "fps" field.
+func (m *VodMutation) ResetFps() {
+	m.fps = nil
+	m.addfps = nil
+}
+
+// SetSize sets the "size" field.
+func (m *VodMutation) SetSize(i int) {
+	m.size = &i
+	m.addsize = nil
+}
+
+// Size returns the value of the "size" field in the mutation.
+func (m *VodMutation) Size() (r int, exists bool) {
+	v := m.size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSize returns the old "size" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSize(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSize is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSize requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSize: %w", err)
+	}
+	return oldValue.Size, nil
+}
+
+// AddSize adds i to the "size" field.
+func (m *VodMutation) AddSize(i int) {
+	if m.addsize != nil {
+		*m.addsize += i
+	} else {
+		m.addsize = &i
+	}
+}
+
+// AddedSize returns the value that was added to the "size" field in this mutation.
+func (m *VodMutation) AddedSize() (r int, exists bool) {
+	v := m.addsize
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSize resets all changes to the "size" field.
+func (m *VodMutation) ResetSize() {
+	m.size = nil
+	m.addsize = nil
+}
+
+// SetPublish sets the "publish" field.
+func (m *VodMutation) SetPublish(b bool) {
+	m.publish = &b
+}
+
+// Publish returns the value of the "publish" field in the mutation.
+func (m *VodMutation) Publish() (r bool, exists bool) {
+	v := m.publish
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublish returns the old "publish" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldPublish(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublish is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublish requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublish: %w", err)
+	}
+	return oldValue.Publish, nil
+}
+
+// ResetPublish resets all changes to the "publish" field.
+func (m *VodMutation) ResetPublish() {
+	m.publish = nil
+}
+
+// SetCreatorID sets the "creator" edge to the Creator entity by id.
+func (m *VodMutation) SetCreatorID(id int) {
+	m.creator = &id
+}
+
+// ClearCreator clears the "creator" edge to the Creator entity.
+func (m *VodMutation) ClearCreator() {
+	m.clearedcreator = true
+}
+
+// CreatorCleared reports if the "creator" edge to the Creator entity was cleared.
+func (m *VodMutation) CreatorCleared() bool {
+	return m.clearedcreator
+}
+
+// CreatorID returns the "creator" edge ID in the mutation.
+func (m *VodMutation) CreatorID() (id int, exists bool) {
+	if m.creator != nil {
+		return *m.creator, true
+	}
+	return
+}
+
+// CreatorIDs returns the "creator" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreatorID instead. It exists only for internal usage by the builders.
+func (m *VodMutation) CreatorIDs() (ids []int) {
+	if id := m.creator; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreator resets all changes to the "creator" edge.
+func (m *VodMutation) ResetCreator() {
+	m.creator = nil
+	m.clearedcreator = false
+}
+
+// AddClipIDs adds the "clips" edge to the Clip entity by ids.
+func (m *VodMutation) AddClipIDs(ids ...int) {
+	if m.clips == nil {
+		m.clips = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.clips[ids[i]] = struct{}{}
+	}
+}
+
+// ClearClips clears the "clips" edge to the Clip entity.
+func (m *VodMutation) ClearClips() {
+	m.clearedclips = true
+}
+
+// ClipsCleared reports if the "clips" edge to the Clip entity was cleared.
+func (m *VodMutation) ClipsCleared() bool {
+	return m.clearedclips
+}
+
+// RemoveClipIDs removes the "clips" edge to the Clip entity by IDs.
+func (m *VodMutation) RemoveClipIDs(ids ...int) {
+	if m.removedclips == nil {
+		m.removedclips = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.clips, ids[i])
+		m.removedclips[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedClips returns the removed IDs of the "clips" edge to the Clip entity.
+func (m *VodMutation) RemovedClipsIDs() (ids []int) {
+	for id := range m.removedclips {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ClipsIDs returns the "clips" edge IDs in the mutation.
+func (m *VodMutation) ClipsIDs() (ids []int) {
+	for id := range m.clips {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetClips resets all changes to the "clips" edge.
+func (m *VodMutation) ResetClips() {
+	m.clips = nil
+	m.clearedclips = false
+	m.removedclips = nil
+}
+
+// AddGameIDs adds the "game" edge to the Game entity by ids.
+func (m *VodMutation) AddGameIDs(ids ...int) {
+	if m.game == nil {
+		m.game = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.game[ids[i]] = struct{}{}
+	}
+}
+
+// ClearGame clears the "game" edge to the Game entity.
+func (m *VodMutation) ClearGame() {
+	m.clearedgame = true
+}
+
+// GameCleared reports if the "game" edge to the Game entity was cleared.
+func (m *VodMutation) GameCleared() bool {
+	return m.clearedgame
+}
+
+// RemoveGameIDs removes the "game" edge to the Game entity by IDs.
+func (m *VodMutation) RemoveGameIDs(ids ...int) {
+	if m.removedgame == nil {
+		m.removedgame = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.game, ids[i])
+		m.removedgame[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedGame returns the removed IDs of the "game" edge to the Game entity.
+func (m *VodMutation) RemovedGameIDs() (ids []int) {
+	for id := range m.removedgame {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// GameIDs returns the "game" edge IDs in the mutation.
+func (m *VodMutation) GameIDs() (ids []int) {
+	for id := range m.game {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetGame resets all changes to the "game" edge.
+func (m *VodMutation) ResetGame() {
+	m.game = nil
+	m.clearedgame = false
+	m.removedgame = nil
+}
+
+// Where appends a list predicates to the VodMutation builder.
+func (m *VodMutation) Where(ps ...predicate.Vod) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *VodMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Vod).
+func (m *VodMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *VodMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.title != nil {
+		fields = append(fields, vod.FieldTitle)
+	}
+	if m.duration != nil {
+		fields = append(fields, vod.FieldDuration)
+	}
+	if m.date != nil {
+		fields = append(fields, vod.FieldDate)
+	}
+	if m.filename != nil {
+		fields = append(fields, vod.FieldFilename)
+	}
+	if m.resolution != nil {
+		fields = append(fields, vod.FieldResolution)
+	}
+	if m.fps != nil {
+		fields = append(fields, vod.FieldFps)
+	}
+	if m.size != nil {
+		fields = append(fields, vod.FieldSize)
+	}
+	if m.publish != nil {
+		fields = append(fields, vod.FieldPublish)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *VodMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case vod.FieldTitle:
+		return m.Title()
+	case vod.FieldDuration:
+		return m.Duration()
+	case vod.FieldDate:
+		return m.Date()
+	case vod.FieldFilename:
+		return m.Filename()
+	case vod.FieldResolution:
+		return m.Resolution()
+	case vod.FieldFps:
+		return m.Fps()
+	case vod.FieldSize:
+		return m.Size()
+	case vod.FieldPublish:
+		return m.Publish()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case vod.FieldTitle:
+		return m.OldTitle(ctx)
+	case vod.FieldDuration:
+		return m.OldDuration(ctx)
+	case vod.FieldDate:
+		return m.OldDate(ctx)
+	case vod.FieldFilename:
+		return m.OldFilename(ctx)
+	case vod.FieldResolution:
+		return m.OldResolution(ctx)
+	case vod.FieldFps:
+		return m.OldFps(ctx)
+	case vod.FieldSize:
+		return m.OldSize(ctx)
+	case vod.FieldPublish:
+		return m.OldPublish(ctx)
+	}
+	return nil, fmt.Errorf("unknown Vod field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VodMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case vod.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case vod.FieldDuration:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDuration(v)
+		return nil
+	case vod.FieldDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
+		return nil
+	case vod.FieldFilename:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFilename(v)
+		return nil
+	case vod.FieldResolution:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolution(v)
+		return nil
+	case vod.FieldFps:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFps(v)
+		return nil
+	case vod.FieldSize:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSize(v)
+		return nil
+	case vod.FieldPublish:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublish(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Vod field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *VodMutation) AddedFields() []string {
+	var fields []string
+	if m.addduration != nil {
+		fields = append(fields, vod.FieldDuration)
+	}
+	if m.addfps != nil {
+		fields = append(fields, vod.FieldFps)
+	}
+	if m.addsize != nil {
+		fields = append(fields, vod.FieldSize)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case vod.FieldDuration:
+		return m.AddedDuration()
+	case vod.FieldFps:
+		return m.AddedFps()
+	case vod.FieldSize:
+		return m.AddedSize()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VodMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case vod.FieldDuration:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDuration(v)
+		return nil
+	case vod.FieldFps:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFps(v)
+		return nil
+	case vod.FieldSize:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSize(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Vod numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *VodMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *VodMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *VodMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Vod nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *VodMutation) ResetField(name string) error {
+	switch name {
+	case vod.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case vod.FieldDuration:
+		m.ResetDuration()
+		return nil
+	case vod.FieldDate:
+		m.ResetDate()
+		return nil
+	case vod.FieldFilename:
+		m.ResetFilename()
+		return nil
+	case vod.FieldResolution:
+		m.ResetResolution()
+		return nil
+	case vod.FieldFps:
+		m.ResetFps()
+		return nil
+	case vod.FieldSize:
+		m.ResetSize()
+		return nil
+	case vod.FieldPublish:
+		m.ResetPublish()
+		return nil
+	}
+	return fmt.Errorf("unknown Vod field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *VodMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.creator != nil {
+		edges = append(edges, vod.EdgeCreator)
+	}
+	if m.clips != nil {
+		edges = append(edges, vod.EdgeClips)
+	}
+	if m.game != nil {
+		edges = append(edges, vod.EdgeGame)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *VodMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case vod.EdgeCreator:
+		if id := m.creator; id != nil {
+			return []ent.Value{*id}
+		}
+	case vod.EdgeClips:
+		ids := make([]ent.Value, 0, len(m.clips))
+		for id := range m.clips {
+			ids = append(ids, id)
+		}
+		return ids
+	case vod.EdgeGame:
+		ids := make([]ent.Value, 0, len(m.game))
+		for id := range m.game {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *VodMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.removedclips != nil {
+		edges = append(edges, vod.EdgeClips)
+	}
+	if m.removedgame != nil {
+		edges = append(edges, vod.EdgeGame)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *VodMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case vod.EdgeClips:
+		ids := make([]ent.Value, 0, len(m.removedclips))
+		for id := range m.removedclips {
+			ids = append(ids, id)
+		}
+		return ids
+	case vod.EdgeGame:
+		ids := make([]ent.Value, 0, len(m.removedgame))
+		for id := range m.removedgame {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *VodMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedcreator {
+		edges = append(edges, vod.EdgeCreator)
+	}
+	if m.clearedclips {
+		edges = append(edges, vod.EdgeClips)
+	}
+	if m.clearedgame {
+		edges = append(edges, vod.EdgeGame)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *VodMutation) EdgeCleared(name string) bool {
+	switch name {
+	case vod.EdgeCreator:
+		return m.clearedcreator
+	case vod.EdgeClips:
+		return m.clearedclips
+	case vod.EdgeGame:
+		return m.clearedgame
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *VodMutation) ClearEdge(name string) error {
+	switch name {
+	case vod.EdgeCreator:
+		m.ClearCreator()
+		return nil
+	}
+	return fmt.Errorf("unknown Vod unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *VodMutation) ResetEdge(name string) error {
+	switch name {
+	case vod.EdgeCreator:
+		m.ResetCreator()
+		return nil
+	case vod.EdgeClips:
+		m.ResetClips()
+		return nil
+	case vod.EdgeGame:
+		m.ResetGame()
+		return nil
+	}
+	return fmt.Errorf("unknown Vod edge %s", name)
 }

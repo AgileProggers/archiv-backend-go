@@ -5,6 +5,7 @@ package ent
 import (
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/schema"
 )
 
@@ -32,4 +33,10 @@ func init() {
 	creatorDescName := creatorFields[0].Descriptor()
 	// creator.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	creator.NameValidator = creatorDescName.Validators[0].(func(string) error)
+	gameFields := schema.Game{}.Fields()
+	_ = gameFields
+	// gameDescGameID is the schema descriptor for game_id field.
+	gameDescGameID := gameFields[0].Descriptor()
+	// game.GameIDValidator is a validator for the "game_id" field. It is called by the builders before save.
+	game.GameIDValidator = gameDescGameID.Validators[0].(func(int) error)
 }

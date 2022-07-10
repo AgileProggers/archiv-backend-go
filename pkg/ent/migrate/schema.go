@@ -45,13 +45,102 @@ var (
 		Columns:    CreatorsColumns,
 		PrimaryKey: []*schema.Column{CreatorsColumns[0]},
 	}
+	// GamesColumns holds the columns for the "games" table.
+	GamesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "game_id", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "box_art", Type: field.TypeString},
+		{Name: "clip_game", Type: field.TypeInt, Nullable: true},
+		{Name: "vod_game", Type: field.TypeInt, Nullable: true},
+	}
+	// GamesTable holds the schema information for the "games" table.
+	GamesTable = &schema.Table{
+		Name:       "games",
+		Columns:    GamesColumns,
+		PrimaryKey: []*schema.Column{GamesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "games_clips_game",
+				Columns:    []*schema.Column{GamesColumns[4]},
+				RefColumns: []*schema.Column{ClipsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "games_vods_game",
+				Columns:    []*schema.Column{GamesColumns[5]},
+				RefColumns: []*schema.Column{VodsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// VodsColumns holds the columns for the "vods" table.
+	VodsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "duration", Type: field.TypeInt},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "filename", Type: field.TypeString},
+		{Name: "resolution", Type: field.TypeString},
+		{Name: "fps", Type: field.TypeFloat64},
+		{Name: "size", Type: field.TypeInt},
+		{Name: "publish", Type: field.TypeBool},
+		{Name: "creator_vods", Type: field.TypeInt, Nullable: true},
+	}
+	// VodsTable holds the schema information for the "vods" table.
+	VodsTable = &schema.Table{
+		Name:       "vods",
+		Columns:    VodsColumns,
+		PrimaryKey: []*schema.Column{VodsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "vods_creators_vods",
+				Columns:    []*schema.Column{VodsColumns[9]},
+				RefColumns: []*schema.Column{CreatorsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// VodClipsColumns holds the columns for the "vod_clips" table.
+	VodClipsColumns = []*schema.Column{
+		{Name: "vod_id", Type: field.TypeInt},
+		{Name: "clip_id", Type: field.TypeInt},
+	}
+	// VodClipsTable holds the schema information for the "vod_clips" table.
+	VodClipsTable = &schema.Table{
+		Name:       "vod_clips",
+		Columns:    VodClipsColumns,
+		PrimaryKey: []*schema.Column{VodClipsColumns[0], VodClipsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "vod_clips_vod_id",
+				Columns:    []*schema.Column{VodClipsColumns[0]},
+				RefColumns: []*schema.Column{VodsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "vod_clips_clip_id",
+				Columns:    []*schema.Column{VodClipsColumns[1]},
+				RefColumns: []*schema.Column{ClipsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ClipsTable,
 		CreatorsTable,
+		GamesTable,
+		VodsTable,
+		VodClipsTable,
 	}
 )
 
 func init() {
 	ClipsTable.ForeignKeys[0].RefTable = CreatorsTable
+	GamesTable.ForeignKeys[0].RefTable = ClipsTable
+	GamesTable.ForeignKeys[1].RefTable = VodsTable
+	VodsTable.ForeignKeys[0].RefTable = CreatorsTable
+	VodClipsTable.ForeignKeys[0].RefTable = VodsTable
+	VodClipsTable.ForeignKeys[1].RefTable = ClipsTable
 }

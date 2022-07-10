@@ -26,6 +26,8 @@ type config struct {
 type hooks struct {
 	Clip    []ent.Hook
 	Creator []ent.Hook
+	Game    []ent.Hook
+	Vod     []ent.Hook
 }
 
 // Options applies the options on the config object.

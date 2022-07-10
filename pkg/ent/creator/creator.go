@@ -11,6 +11,8 @@ const (
 	FieldName = "name"
 	// EdgeClips holds the string denoting the clips edge name in mutations.
 	EdgeClips = "clips"
+	// EdgeVods holds the string denoting the vods edge name in mutations.
+	EdgeVods = "vods"
 	// Table holds the table name of the creator in the database.
 	Table = "creators"
 	// ClipsTable is the table that holds the clips relation/edge.
@@ -20,6 +22,13 @@ const (
 	ClipsInverseTable = "clips"
 	// ClipsColumn is the table column denoting the clips relation/edge.
 	ClipsColumn = "creator_clips"
+	// VodsTable is the table that holds the vods relation/edge.
+	VodsTable = "vods"
+	// VodsInverseTable is the table name for the Vod entity.
+	// It exists in this package in order to avoid circular dependency with the "vod" package.
+	VodsInverseTable = "vods"
+	// VodsColumn is the table column denoting the vods relation/edge.
+	VodsColumn = "creator_vods"
 )
 
 // Columns holds all SQL columns for creator fields.
