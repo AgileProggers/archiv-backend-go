@@ -32,7 +32,7 @@ func GetCreators(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusBadRequest, fmt.Errorf("validation error: %v", err))
 	}
 
-	if err := database.GetAllCreators(&creators, query); err != nil {
+	if err := database.Creators(&creators, query); err != nil {
 		return there.Error(there.StatusNotFound, "No creators found")
 	}
 

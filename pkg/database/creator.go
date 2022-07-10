@@ -1,50 +1,35 @@
 package database
 
 import (
-	"errors"
+	"context"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/creator"
 )
 
-type Creator struct {
-	UUID  int    `gorm:"primaryKey;uniqueIndex;not null" json:"uuid"`
-	Name  string `gorm:"not null" json:"name" binding:"required"`
-	Clips []Clip `gorm:"foreignKey:Creator;association_foreignkey=UUID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"clips,omitempty"`
-}
-
-func GetAllCreators(c *[]Creator, query Creator) (err error) {
+/*
+func Creators(c *[]ent.Creator, query Creator) (err error) {
 	result := database.Where(query).Find(c)
 	if result.RowsAffected == 0 {
 		return errors.New("not found")
 	}
 	return nil
 }
+*/
 
-func AddNewCreator(c *Creator) (err error) {
-	if err = database.Create(c).Error; err != nil {
-		return err
-	}
-	return nil
+func CreatorById(id int) (*ent.Creator, error) {
+	return client.Creator.Get(context.Background(), id)
 }
 
-func GetOneCreator(c *Creator, uuid int) (err error) {
-	result := database.Where("uuid = ?", uuid).Find(c)
-	if result.RowsAffected == 0 {
-		return errors.New("not found")
-	}
-	return nil
+func CreateCreator() *ent.CreatorCreate {
+	return client.Creator.Create()
 }
 
-func PatchCreator(c *Creator, uuid int) (err error) {
-	var creator Creator
-	if err := GetOneCreator(&creator, uuid); err != nil {
-		return errors.New("creator not found")
-	}
-	if err := database.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
-		return errors.New("update failed")
-	}
-	return nil
+func PatchCreator(id int) *ent.CreatorUpdateOne {
+	return client.Creator.UpdateOneID(id)
 }
 
-func DeleteCreator(c *Creator, uuid int) (err error) {
-	database.Where("uuid = ?", uuid).Delete(c)
-	return nil
+func DeleteCreators(ids ...int) (int, error) {
+	return client.Creator.Delete().
+		Where(creator.IDIn(ids...)).
+		Exec(context.Background())
 }

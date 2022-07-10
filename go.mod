@@ -3,6 +3,7 @@ module github.com/AgileProggers/archiv-backend-go
 go 1.18
 
 require (
+	entgo.io/ent v0.10.1
 	github.com/Gebes/there/v2 v2.1.3
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/joho/godotenv v1.4.0
