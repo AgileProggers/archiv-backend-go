@@ -1,0 +1,20 @@
+version: '3.3'
+services:
+  db:
+    build:
+     context: .
+     dockerfile: postgres.Dockerfile
+    restart: always
+    command: -c ssl=on -c ssl_cert_file=/var/lib/postgresql/server.crt -c ssl_key_file=/var/lib/postgresql/server.key
+    environment:
+      - POSTGRES_DB=test
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=agilePw
+    ports:
+      - '49211:5432'
+    volumes:
+      - prook-db:/var/lib/postgresql/data
+# Names our volume
+volumes:
+  prook-db:
+    driver: local
