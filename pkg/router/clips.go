@@ -34,7 +34,6 @@ func GetClips(request there.HttpRequest) there.HttpResponse {
 	params := map[string][]string(*request.Params)
 
 	clips, err := database.ClipsByQuery(params)
-	// println(request.Params.GetSlice())
 	if err != nil {
 		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to filter clips: %v", err))
 	}
@@ -51,7 +50,7 @@ func GetClips(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [get]
 // @Param uuid path string true "Unique Identifier"
 func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
-	var clip int//database.Clip
+	var clip int //database.Clip
 
 	// uuid := request.Params.GetDefault("uuid", "")
 
