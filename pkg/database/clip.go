@@ -8,6 +8,7 @@ import (
 	"github.com/AgileProggers/archiv-backend-go/pkg/database/internal/query"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ressources"
 )
 
 func Clips() ([]*ent.Clip, error) {
@@ -53,12 +54,39 @@ func ClipById(id int) (*ent.Clip, error) {
 	return client.Clip.Get(context.Background(), id)
 }
 
-func CreateClip() *ent.ClipCreate {
-	return client.Clip.Create()
+// func CreateClip(params map[string][]string) (*ent.Clip, error) {
+func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
+	return client.Clip.
+		Create().
+		SetDate(clip.Date).
+		SetDuration(clip.Duration).
+		SetFilename(clip.Filename).
+		SetResolution(clip.Resolution).
+		SetSize(clip.Size).
+		SetTitle(clip.Title).
+		SetViewCount(clip.ViewCount).
+		Save(context.Background())
 }
 
-func PatchClip(id int) *ent.ClipUpdateOne {
-	return client.Clip.UpdateOneID(id)
+func PatchClip(id int, clip ressources.Clip) (*ent.Clip, error) {
+	originalClip, err := client.Clip.Get(context.Background(), id)
+	if err != nil {
+		return nil, fmt.Errorf("Clip not found")
+	}
+
+	 fmt.Println(clip)
+	 fmt.Println(originalClip)
+
+
+	return client.Clip.UpdateOneID(id).
+		SetDate(clip.Date).
+		SetDuration(clip.Duration).
+		SetFilename(clip.Filename).
+		SetResolution(clip.Resolution).
+		SetSize(clip.Size).
+		SetTitle(clip.Title).
+		SetViewCount(clip.ViewCount).
+		Save(context.Background())
 }
 
 func DeleteClips(ids ...int) (int, error) {

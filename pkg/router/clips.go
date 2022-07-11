@@ -6,6 +6,7 @@ import (
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/database"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ressources"
 	"github.com/Gebes/there/v2"
 )
 
@@ -77,23 +78,20 @@ func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/ [post]
 // @Param Body body database.Clip true "Clip obj"
 func CreateClip(request there.HttpRequest) there.HttpResponse {
-	// var newClip database.Clip
-	// var clip database.Clip
+	var clip ressources.Clip
 
-	// err := request.Body.BindJson(&newClip)
-	// if err != nil {
-	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
-	// }
+	err := request.Body.BindJson(&clip)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
+	}
 
-	// if err := database.GetOneClip(&clip, newClip.UUID); err == nil {
-	// 	return there.Error(there.StatusBadRequest, "Clip already exists")
-	// }
+	newClip, err := database.CreateClip(clip)
 
-	// if err := database.AddNewClip(&newClip); err != nil {
-	// 	return there.Error(there.StatusUnprocessableEntity, "Error while creating the model")
-	// }
+	if err != nil {
+		return there.Error(there.StatusBadRequest, "Unable to create CLip" )
+	}
 
-	return there.Message(there.StatusCreated, "Created")
+	return there.Json(there.StatusCreated, newClip)
 }
 
 // PatchClip godoc
@@ -108,19 +106,28 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 // @Param uuid path string true "Unique Identifier"
 // @Param Body body database.Clip true "Clip obj"
 func PatchClip(request there.HttpRequest) there.HttpResponse {
-	// var newClip database.Clip
-	// uuid := request.Params.GetDefault("uuid", "")
+	var clip [][]string
+	uuid := request.RouteParams.GetDefault("uuid", "")  
 
-	// err := request.Body.BindJson(&newClip)
-	// if err != nil {
-	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind query: %v", err))
-	// }
+	id, convErr := strconv.Atoi(uuid)
+	if convErr != nil {
+		return there.Error(there.StatusNotFound, convErr)
+	}
 
-	// if err := database.PatchClip(&newClip, uuid); err != nil {
-	// 	return there.Error(there.StatusUnprocessableEntity, "Error while patching the model")
-	// }
+	err := request.Body.BindJson(&clip)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
+	}
+	fmt.Println(clip)
+	fmt.Println(id)
 
-	return there.Message(there.StatusOK, "Updated")
+	// newClip, err := database.PatchClip(id, clip)
+
+	if err != nil {
+		return there.Error(there.StatusBadRequest, "Unable to create Clip" )
+	}
+
+	return there.Json(there.StatusCreated, clip)
 }
 
 // DeleteClip godoc
