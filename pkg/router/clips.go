@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/database"
 	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
@@ -50,13 +51,17 @@ func GetClips(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [get]
 // @Param uuid path string true "Unique Identifier"
 func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
-	var clip int //database.Clip
+	uuid := request.RouteParams.GetDefault("uuid", "")  
 
-	// uuid := request.Params.GetDefault("uuid", "")
+	id, err := strconv.Atoi(uuid)
+	if err != nil {
+		return there.Error(there.StatusNotFound, err)
+	}
 
-	// if err := database.GetOneClip(&clip, uuid); err != nil {
-	// 	return there.Error(there.StatusNotFound, "Clip not found")
-	// }
+	clip, err := database.ClipById(id)
+	if err != nil {
+		return there.Error(there.StatusNotFound, "Clip not found")
+	}
 
 	return there.Json(there.StatusOK, clip)
 }
