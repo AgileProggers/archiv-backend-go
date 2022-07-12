@@ -68,25 +68,8 @@ func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
 		Save(context.Background())
 }
 
-func PatchClip(id int, clip ressources.Clip) (*ent.Clip, error) {
-	originalClip, err := client.Clip.Get(context.Background(), id)
-	if err != nil {
-		return nil, fmt.Errorf("Clip not found")
-	}
-
-	 fmt.Println(clip)
-	 fmt.Println(originalClip)
-
-
-	return client.Clip.UpdateOneID(id).
-		SetDate(clip.Date).
-		SetDuration(clip.Duration).
-		SetFilename(clip.Filename).
-		SetResolution(clip.Resolution).
-		SetSize(clip.Size).
-		SetTitle(clip.Title).
-		SetViewCount(clip.ViewCount).
-		Save(context.Background())
+func PatchClip(id int) (*ent.ClipUpdateOne) {
+	return client.Clip.UpdateOneID(id)
 }
 
 func DeleteClips(ids ...int) (int, error) {

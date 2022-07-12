@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -85,6 +86,11 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusBadRequest, err )
 	}
 
+	err = postValidator.Struct(clip)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
+	}
+
 	newClip, err := database.CreateClip(clip)
 
 	if err != nil {
@@ -106,7 +112,7 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 // @Param uuid path string true "Unique Identifier"
 // @Param Body body database.Clip true "Clip obj"
 func PatchClip(request there.HttpRequest) there.HttpResponse {
-	var clip [][]string
+	var clip ressources.Clip
 	uuid := request.RouteParams.GetDefault("uuid", "")  
 
 	id, convErr := strconv.Atoi(uuid)
@@ -114,20 +120,34 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusNotFound, convErr)
 	}
 
+	clip.ID = id
+
 	err := request.Body.BindJson(&clip)
 	if err != nil {
 		return there.Error(there.StatusBadRequest, err )
 	}
-	fmt.Println(clip)
-	fmt.Println(id)
 
-	// newClip, err := database.PatchClip(id, clip)
+
+	err = patchValidator.Struct(clip)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
+	}
+
+	newClip, err := database.PatchClip(id).
+		SetDate(clip.Date).
+		SetDuration(clip.Duration).
+		SetFilename(clip.Filename).
+		SetResolution(clip.Resolution).
+		SetSize(clip.Size).
+		SetTitle(clip.Title).
+		SetViewCount(clip.ViewCount).
+		Save(context.Background())
 
 	if err != nil {
 		return there.Error(there.StatusBadRequest, "Unable to create Clip" )
 	}
 
-	return there.Json(there.StatusCreated, clip)
+	return there.Json(there.StatusCreated, newClip)
 }
 
 // DeleteClip godoc
