@@ -32,7 +32,7 @@ func ClipsByQuery(params map[string][]string) ([]*ent.Clip, error) {
 		order := strings.Split(orderParams[0], ",")
 
 		if len(order) != 2 {
-			return nil, fmt.Errorf("Invalid order params. Example: 'date,desc'")
+			return nil, fmt.Errorf("invalid order params. Example: 'date,desc'")
 		}
 
 		column := strings.ToLower(order[0])
@@ -72,8 +72,7 @@ func PatchClip(id int) (*ent.ClipUpdateOne) {
 	return client.Clip.UpdateOneID(id)
 }
 
-func DeleteClips(ids ...int) (int, error) {
-	return client.Clip.Delete().
-		Where(clip.IDIn(ids...)).
+func DeleteClip(id int) (error) {
+	return client.Clip.DeleteOneID(id).
 		Exec(context.Background())
 }

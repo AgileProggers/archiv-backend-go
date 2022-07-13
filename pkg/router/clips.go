@@ -57,12 +57,18 @@ func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
 
 	id, err := strconv.Atoi(uuid)
 	if err != nil {
-		return there.Error(there.StatusNotFound, err)
+		return there.Error(there.StatusBadRequest, err)
 	}
 
 	clip, err := database.ClipById(id)
 	if err != nil {
-		return there.Error(there.StatusNotFound, "Clip not found")
+		status := there.StatusInternalServerError
+		if ent.IsNotFound(err) {
+			status = there.StatusNotFound
+
+		}
+
+		return there.Error(status, err)
 	}
 
 	return there.Json(there.StatusOK, clip)
@@ -92,9 +98,18 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 	}
 
 	newClip, err := database.CreateClip(clip)
-
 	if err != nil {
-		return there.Error(there.StatusBadRequest, "Unable to create CLip" )
+		status := there.StatusInternalServerError
+
+		if ent.IsConstraintError(err) {
+			status = there.StatusConflict
+		}
+
+		if ent.IsValidationError(err) {
+			status = there.StatusBadRequest
+		}
+
+		return there.Error(status, err )
 	}
 
 	return there.Json(there.StatusCreated, newClip)
@@ -117,7 +132,7 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 
 	id, convErr := strconv.Atoi(uuid)
 	if convErr != nil {
-		return there.Error(there.StatusNotFound, convErr)
+		return there.Error(there.StatusBadRequest, convErr)
 	}
 
 	clip.ID = id
@@ -161,16 +176,17 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [delete]
 // @Param uuid path string true "Unique Identifier"
 func DeleteClip(request there.HttpRequest) there.HttpResponse {
-	// var clip database.Clip
-	// uuid := request.Params.GetDefault("uuid", "")
+	uuid := request.Params.GetDefault("uuid", "")
 
-	// if err := database.GetOneClip(&clip, uuid); err != nil {
-	// 	return there.Error(there.StatusNotFound, "Clip not found")
-	// }
+	id, convErr := strconv.Atoi(uuid)
+	if convErr != nil {
+		return there.Error(there.StatusNotFound, convErr)
+	}
 
-	// if err := database.DeleteClip(&clip, uuid); err != nil {
-	// 	return there.Error(there.StatusBadRequest, "Error while deleting the model")
-	// }
+	err := database.DeleteClip(id)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
+	}
 
 	return there.Message(there.StatusOK, "Deleted")
 }
