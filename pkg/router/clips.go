@@ -176,11 +176,11 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [delete]
 // @Param uuid path string true "Unique Identifier"
 func DeleteClip(request there.HttpRequest) there.HttpResponse {
-	uuid := request.Params.GetDefault("uuid", "")
+	uuid := request.RouteParams.GetDefault("uuid", "")
 
 	id, convErr := strconv.Atoi(uuid)
 	if convErr != nil {
-		return there.Error(there.StatusNotFound, convErr)
+		return there.Error(there.StatusBadRequest, convErr)
 	}
 
 	err := database.DeleteClip(id)
@@ -188,5 +188,5 @@ func DeleteClip(request there.HttpRequest) there.HttpResponse {
 		return there.Error(there.StatusBadRequest, err )
 	}
 
-	return there.Message(there.StatusOK, "Deleted")
+	return there.Message(there.StatusOK, "Clip Deleted succesfully")
 }
