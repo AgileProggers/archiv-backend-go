@@ -12,4 +12,5 @@ type Clip struct {
 	Resolution string `post:"required" patch:"required" json:"resolution"`
 	Size int `post:"required" patch:"required" json:"size"`
 	ViewCount int `post:"required" patch:"required" json:"view_count"`
+	VodID int `post:"required" patch:"required" json:"vod_id"`
 }

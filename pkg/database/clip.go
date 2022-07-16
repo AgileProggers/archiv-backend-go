@@ -56,7 +56,7 @@ func ClipById(id int) (*ent.Clip, error) {
 
 // func CreateClip(params map[string][]string) (*ent.Clip, error) {
 func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
-	return client.Clip.
+	newClip := client.Clip.
 		Create().
 		SetDate(clip.Date).
 		SetDuration(clip.Duration).
@@ -64,8 +64,18 @@ func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
 		SetResolution(clip.Resolution).
 		SetSize(clip.Size).
 		SetTitle(clip.Title).
-		SetViewCount(clip.ViewCount).
-		Save(context.Background())
+		SetViewCount(clip.ViewCount)
+	
+	// TODO: add vod, game and creator when its ready
+	// vod, err := database.vo(clip.VodID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("cannot find vod: %v", err)
+	// }
+
+	// newClip.AddVod(vod)
+		
+	
+	return newClip.Save(context.Background())
 }
 
 func PatchClip(id int) (*ent.ClipUpdateOne) {
