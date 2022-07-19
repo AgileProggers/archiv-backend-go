@@ -19,7 +19,7 @@ func CreatorsByQuery(params map[string][]string) ([]*ent.Creator, error) {
 	orderParams := params["order"]
 
 	delete(params, "order")
-	
+
 	queryPredicate, err := query.BuildPredicate(vod.Columns, params)
 
 	if err != nil {
@@ -60,7 +60,6 @@ func CreateCreator(creator ressources.Creator) (*ent.Creator, error) {
 		Create().
 		SetName(creator.Name)
 
-	
 	// TODO: add vod, game and creator when its ready
 	// vod, err := database.vo(vod.vodID)
 	// if err != nil {
@@ -68,15 +67,15 @@ func CreateCreator(creator ressources.Creator) (*ent.Creator, error) {
 	// }
 
 	// newvod.Addvod(vod)
-	
+
 	return newVod.Save(context.Background())
 }
 
-func PatchCreator(id int) (*ent.CreatorUpdateOne) {
+func PatchCreator(id int) *ent.CreatorUpdateOne {
 	return client.Creator.UpdateOneID(id)
 }
 
-func DeleteCreator(id int) (error) {
+func DeleteCreator(id int) error {
 	return client.Creator.DeleteOneID(id).
 		Exec(context.Background())
 }

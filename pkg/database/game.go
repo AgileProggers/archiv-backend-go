@@ -19,7 +19,7 @@ func GamesByQuery(params map[string][]string) ([]*ent.Game, error) {
 	orderParams := params["order"]
 
 	delete(params, "order")
-	
+
 	queryPredicate, err := query.BuildPredicate(game.Columns, params)
 
 	if err != nil {
@@ -61,7 +61,7 @@ func CreateGame(game ressources.Game) (*ent.Game, error) {
 		Create().
 		SetBoxArt(game.Boxart).
 		SetName(game.Name)
-	
+
 	// TODO: add game, game and creator when its ready
 	// game, err := database.vo(game.gameID)
 	// if err != nil {
@@ -69,19 +69,15 @@ func CreateGame(game ressources.Game) (*ent.Game, error) {
 	// }
 
 	// newgame.Addgame(game)
-		
-	
+
 	return newGame.Save(context.Background())
 }
 
-func PatchGame(id int) (*ent.GameUpdateOne) {
+func PatchGame(id int) *ent.GameUpdateOne {
 	return client.Game.UpdateOneID(id)
 }
 
-func DeleteGame(id int) (error) {
+func DeleteGame(id int) error {
 	return client.Game.DeleteOneID(id).
 		Exec(context.Background())
 }
-
-
-

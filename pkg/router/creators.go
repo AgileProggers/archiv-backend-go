@@ -45,7 +45,7 @@ func GetCreators(request there.HttpRequest) there.HttpResponse {
 // @Router /creators/{uuid} [get]
 // @Param uuid path int true "Unique Identifyer"
 func GetCreatorByUUID(request there.HttpRequest) there.HttpResponse {
-	var creator int//database.Creator
+	var creator int //database.Creator
 
 	// uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
 	// if err != nil {

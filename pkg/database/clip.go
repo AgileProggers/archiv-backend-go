@@ -19,7 +19,7 @@ func ClipsByQuery(params map[string][]string) ([]*ent.Clip, error) {
 	orderParams := params["order"]
 
 	delete(params, "order")
-	
+
 	queryPredicate, err := query.BuildPredicate(clip.Columns, params)
 
 	if err != nil {
@@ -65,7 +65,7 @@ func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
 		SetSize(clip.Size).
 		SetTitle(clip.Title).
 		SetViewCount(clip.ViewCount)
-	
+
 	// TODO: add vod, game and creator when its ready
 	// vod, err := database.vo(clip.VodID)
 	// if err != nil {
@@ -73,16 +73,15 @@ func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
 	// }
 
 	// newClip.AddVod(vod)
-		
-	
+
 	return newClip.Save(context.Background())
 }
 
-func PatchClip(id int) (*ent.ClipUpdateOne) {
+func PatchClip(id int) *ent.ClipUpdateOne {
 	return client.Clip.UpdateOneID(id)
 }
 
-func DeleteClip(id int) (error) {
+func DeleteClip(id int) error {
 	return client.Clip.DeleteOneID(id).
 		Exec(context.Background())
 }

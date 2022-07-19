@@ -19,7 +19,7 @@ func VodsByQuery(params map[string][]string) ([]*ent.Vod, error) {
 	orderParams := params["order"]
 
 	delete(params, "order")
-	
+
 	queryPredicate, err := query.BuildPredicate(vod.Columns, params)
 
 	if err != nil {
@@ -66,7 +66,7 @@ func Createvod(vod ressources.Vod) (*ent.Vod, error) {
 		SetResolution(vod.Resolution).
 		SetSize(vod.Size).
 		SetTitle(vod.Title)
-	
+
 	// TODO: add vod, game and creator when its ready
 	// vod, err := database.vo(vod.vodID)
 	// if err != nil {
@@ -74,16 +74,15 @@ func Createvod(vod ressources.Vod) (*ent.Vod, error) {
 	// }
 
 	// newvod.Addvod(vod)
-		
-	
+
 	return newVod.Save(context.Background())
 }
 
-func Patchvod(id int) (*ent.VodUpdateOne) {
+func Patchvod(id int) *ent.VodUpdateOne {
 	return client.Vod.UpdateOneID(id)
 }
 
-func Deletevod(id int) (error) {
+func Deletevod(id int) error {
 	return client.Vod.DeleteOneID(id).
 		Exec(context.Background())
 }

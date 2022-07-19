@@ -53,7 +53,7 @@ func GetClips(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [get]
 // @Param uuid path string true "Unique Identifier"
 func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
-	uuid := request.RouteParams.GetDefault("uuid", "")  
+	uuid := request.RouteParams.GetDefault("uuid", "")
 
 	id, err := strconv.Atoi(uuid)
 	if err != nil {
@@ -89,12 +89,12 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 
 	err := request.Body.BindJson(&clip)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, err )
+		return there.Error(there.StatusBadRequest, err)
 	}
 
 	err = postValidator.Struct(clip)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, err )
+		return there.Error(there.StatusBadRequest, err)
 	}
 
 	newClip, err := database.CreateClip(clip)
@@ -109,7 +109,7 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 			status = there.StatusBadRequest
 		}
 
-		return there.Error(status, err )
+		return there.Error(status, err)
 	}
 
 	return there.Json(there.StatusCreated, newClip)
@@ -128,7 +128,7 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 // @Param Body body database.Clip true "Clip obj"
 func PatchClip(request there.HttpRequest) there.HttpResponse {
 	var clip ressources.Clip
-	uuid := request.RouteParams.GetDefault("uuid", "")  
+	uuid := request.RouteParams.GetDefault("uuid", "")
 
 	id, convErr := strconv.Atoi(uuid)
 	if convErr != nil {
@@ -139,13 +139,12 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 
 	err := request.Body.BindJson(&clip)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, err )
+		return there.Error(there.StatusBadRequest, err)
 	}
-
 
 	err = patchValidator.Struct(clip)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, err )
+		return there.Error(there.StatusBadRequest, err)
 	}
 
 	newClip, err := database.PatchClip(id).
@@ -159,7 +158,7 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 		Save(context.Background())
 
 	if err != nil {
-		return there.Error(there.StatusBadRequest, "Unable to create Clip" )
+		return there.Error(there.StatusBadRequest, "Unable to create Clip")
 	}
 
 	return there.Json(there.StatusCreated, newClip)
@@ -185,7 +184,7 @@ func DeleteClip(request there.HttpRequest) there.HttpResponse {
 
 	err := database.DeleteClip(id)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, err )
+		return there.Error(there.StatusBadRequest, err)
 	}
 
 	return there.Message(there.StatusOK, "Clip Deleted succesfully")

@@ -7,7 +7,7 @@ import (
 )
 
 type Vod struct {
-	Id         string  	  `post:"required" patch:"required" json:"id,omitempty"`
+	Id         string     `post:"required" patch:"required" json:"id,omitempty"`
 	Title      string     `post:"required" patch:"required" json:"title"`
 	Duration   int        `post:"required" patch:"required" json:"duration"`
 	Date       time.Time  `post:"required" patch:"required" json:"date"`

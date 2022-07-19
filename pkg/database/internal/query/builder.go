@@ -27,11 +27,10 @@ func BuildPredicate(columns []string, query map[string][]string) (func(selector 
 	}, nil
 }
 
-
 func ContainsColumn(modelColumns []string, column string) bool {
 	contains := false
 	for _, modelColumn := range modelColumns {
-		if column == modelColumn  {
+		if column == modelColumn {
 			contains = true
 			break
 		}

@@ -11,8 +11,8 @@ import (
 var (
 	app              *there.Router
 	bindingValidator = validator.New()
-	patchValidator = validator.New()
-	postValidator = validator.New()
+	patchValidator   = validator.New()
+	postValidator    = validator.New()
 )
 
 func Listen() error {
