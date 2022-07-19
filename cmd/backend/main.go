@@ -1,12 +1,13 @@
 package main
 
 import (
+	"net/http"
+	"os"
+
 	"github.com/AgileProggers/archiv-backend-go/pkg/database"
 	"github.com/AgileProggers/archiv-backend-go/pkg/logger"
 	"github.com/AgileProggers/archiv-backend-go/pkg/router"
 	"github.com/AgileProggers/archiv-backend-go/pkg/signals"
-	"net/http"
-	"os"
 )
 
 func main() {

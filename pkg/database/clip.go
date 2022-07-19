@@ -1,77 +1,88 @@
 package database
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	"strings"
-	"time"
+
+	"github.com/AgileProggers/archiv-backend-go/pkg/database/internal/query"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/clip"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ressources"
 )
 
-type Clip struct {
-	UUID       string    `gorm:"primaryKey;uniqueIndex" json:"uuid"`
-	Title      string    `gorm:"not null" json:"title" binding:"required"`
-	Duration   int       `gorm:"not null" json:"duration" binding:"required"`
-	Date       time.Time `gorm:"not null" json:"date" time_format:"2006-01-02T15:04:05.000Z" binding:"required"`
-	Filename   string    `gorm:"not null" json:"filename" binding:"required"`
-	Resolution string    `gorm:"not null" json:"resolution" binding:"required"`
-	Size       int       `gorm:"not null" json:"size" binding:"required"`
-	Viewcount  int       `gorm:"not null" json:"viewcount" binding:"required"`
-	Creator    int       `gorm:"colum:creator" json:"creator"`
-	Game       int       `gorm:"colum:game" json:"game"`
-	Vod        string    `gorm:"colum:vod" json:"vod"`
+func Clips() ([]*ent.Clip, error) {
+	return client.Clip.Query().All(context.Background())
 }
 
-func GetAllClips(c *[]Clip, query Clip, o string) (err error) {
-	if o == "" {
-		o = "date desc"
+func ClipsByQuery(params map[string][]string) ([]*ent.Clip, error) {
+	orderParams := params["order"]
+
+	delete(params, "order")
+	
+	queryPredicate, err := query.BuildPredicate(clip.Columns, params)
+
+	if err != nil {
+		return nil, fmt.Errorf("build query predicate: %v", err)
 	}
-	result := database.Where(query).Order(o).Find(c)
-	if result.RowsAffected == 0 {
-		return errors.New("not found")
+
+	buildQuery := client.Clip.Query().Where(queryPredicate).WithCreator().WithGame().WithVod()
+
+	if orderParams != nil {
+		order := strings.Split(orderParams[0], ",")
+
+		if len(order) != 2 {
+			return nil, fmt.Errorf("invalid order params. Example: 'date,desc'")
+		}
+
+		column := strings.ToLower(order[0])
+		direction := strings.ToLower(order[1])
+
+		if query.ContainsColumn(clip.Columns, column) {
+			if direction == "asc" {
+				buildQuery.Order(ent.Asc(column))
+			} else {
+				buildQuery.Order(ent.Desc(column))
+			}
+		}
 	}
-	return nil
+
+	return buildQuery.All(context.Background())
 }
 
-func AddNewClip(c *Clip) (err error) {
-	var creator Creator
-	var game Game
-	var vod Vod
-	var omits []string
-
-	if err := GetOneCreator(&creator, c.Creator); err != nil {
-		omits = append(omits, "Creator")
-	}
-	if err := GetOneGame(&game, c.Game); err != nil {
-		omits = append(omits, "Game")
-	}
-	if err := GetOneVod(&vod, c.Vod); err != nil {
-		omits = append(omits, "Vod")
-	}
-	if err = database.Omit(strings.Join(omits, ",")).Create(&c).Error; err != nil {
-		return err
-	}
-	return nil
+func ClipById(id int) (*ent.Clip, error) {
+	return client.Clip.Get(context.Background(), id)
 }
 
-func GetOneClip(c *Clip, uuid string) (err error) {
-	result := database.Where("uuid = ?", uuid).Find(c)
-	if result.RowsAffected == 0 {
-		return errors.New("not found")
-	}
-	return nil
+// func CreateClip(params map[string][]string) (*ent.Clip, error) {
+func CreateClip(clip ressources.Clip) (*ent.Clip, error) {
+	newClip := client.Clip.
+		Create().
+		SetDate(clip.Date).
+		SetDuration(clip.Duration).
+		SetFilename(clip.Filename).
+		SetResolution(clip.Resolution).
+		SetSize(clip.Size).
+		SetTitle(clip.Title).
+		SetViewCount(clip.ViewCount)
+	
+	// TODO: add vod, game and creator when its ready
+	// vod, err := database.vo(clip.VodID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("cannot find vod: %v", err)
+	// }
+
+	// newClip.AddVod(vod)
+		
+	
+	return newClip.Save(context.Background())
 }
 
-func PatchClip(c *Clip, uuid string) (err error) {
-	var clip Clip
-	if err := GetOneClip(&clip, uuid); err != nil {
-		return errors.New("clip not found")
-	}
-	if err := database.Where("uuid = ?", uuid).Updates(c).Error; err != nil {
-		return errors.New("update failed")
-	}
-	return nil
+func PatchClip(id int) (*ent.ClipUpdateOne) {
+	return client.Clip.UpdateOneID(id)
 }
 
-func DeleteClip(c *Clip, uuid string) (err error) {
-	database.Where("uuid = ?", uuid).Delete(c)
-	return nil
+func DeleteClip(id int) (error) {
+	return client.Clip.DeleteOneID(id).
+		Exec(context.Background())
 }

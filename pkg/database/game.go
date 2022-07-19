@@ -1,51 +1,87 @@
 package database
 
 import (
-	"errors"
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/AgileProggers/archiv-backend-go/pkg/database/internal/query"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent/game"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ressources"
 )
 
-type Game struct {
-	UUID   int    `gorm:"primaryKey;uniqueIndex;not null" json:"uuid"`
-	Name   string `gorm:"not null" json:"name" binding:"required"`
-	Boxart string `gorm:"not null" json:"box_art" binding:"required"`
-	Clips  []Clip `gorm:"foreignKey:Game;association_foreignkey=UUID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
+func Games() ([]*ent.Game, error) {
+	return client.Game.Query().All(context.Background())
 }
 
-func GetAllGames(g *[]Game, query Game) (err error) {
-	result := database.Where(query).Find(g)
-	if result.RowsAffected == 0 {
-		return errors.New("not found")
+func GamesByQuery(params map[string][]string) ([]*ent.Game, error) {
+	orderParams := params["order"]
+
+	delete(params, "order")
+	
+	queryPredicate, err := query.BuildPredicate(game.Columns, params)
+
+	if err != nil {
+		return nil, fmt.Errorf("build query predicate: %v", err)
 	}
-	return nil
+
+	// TODO: maybe relations?
+	buildQuery := client.Game.Query().Where(queryPredicate)
+
+	if orderParams != nil {
+		order := strings.Split(orderParams[0], ",")
+
+		if len(order) != 2 {
+			return nil, fmt.Errorf("invalid order params. Example: 'date,desc'")
+		}
+
+		column := strings.ToLower(order[0])
+		direction := strings.ToLower(order[1])
+
+		if query.ContainsColumn(game.Columns, column) {
+			if direction == "asc" {
+				buildQuery.Order(ent.Asc(column))
+			} else {
+				buildQuery.Order(ent.Desc(column))
+			}
+		}
+	}
+
+	return buildQuery.All(context.Background())
 }
 
-func AddNewGame(g *Game) (err error) {
-	if err = database.Create(g).Error; err != nil {
-		return err
-	}
-	return nil
+func GameById(id int) (*ent.Game, error) {
+	return client.Game.Get(context.Background(), id)
 }
 
-func GetOneGame(g *Game, uuid int) (err error) {
-	result := database.Where("uuid = ?", uuid).Find(g)
-	if result.RowsAffected == 0 {
-		return errors.New("not found")
-	}
-	return nil
+// func Creategame(params map[string][]string) (*ent.Game, error) {
+func CreateGame(game ressources.Game) (*ent.Game, error) {
+	newGame := client.Game.
+		Create().
+		SetBoxArt(game.Boxart).
+		SetName(game.Name)
+	
+	// TODO: add game, game and creator when its ready
+	// game, err := database.vo(game.gameID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("cannot find game: %v", err)
+	// }
+
+	// newgame.Addgame(game)
+		
+	
+	return newGame.Save(context.Background())
 }
 
-func PatchGame(g *Game, uuid int) (err error) {
-	var game Game
-	if err := GetOneGame(&game, uuid); err != nil {
-		return errors.New("game not found")
-	}
-	if err := database.Where("uuid = ?", uuid).Updates(g).Error; err != nil {
-		return errors.New("update failed")
-	}
-	return nil
+func PatchGame(id int) (*ent.GameUpdateOne) {
+	return client.Game.UpdateOneID(id)
 }
 
-func DeleteGame(g *Game, uuid int) (err error) {
-	database.Where("uuid = ?", uuid).Delete(g)
-	return nil
+func DeleteGame(id int) (error) {
+	return client.Game.DeleteOneID(id).
+		Exec(context.Background())
 }
+
+
+

@@ -1,21 +1,15 @@
 package router
 
 import (
+	"context"
 	"fmt"
-	"strings"
+	"strconv"
 
 	"github.com/AgileProggers/archiv-backend-go/pkg/database"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ressources"
 	"github.com/Gebes/there/v2"
 )
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
 
 // GetClips godoc
 // @Summary Get all clips
@@ -39,36 +33,12 @@ func stringInSlice(a string, list []string) bool {
 // @Param vod query string false "The vod id of a clip"
 // @Param order query string false "Set order direction divided by comma. Possible ordering values: 'date', 'duration', 'size'. Possible directions: 'asc', 'desc'. Example: 'date,desc'"
 func GetClips(request there.HttpRequest) there.HttpResponse {
-	var clips []database.Clip
-	var query database.Clip
+	var clips []*ent.Clip
+	params := map[string][]string(*request.Params)
 
-	err := request.Body.BindJson(&query)
+	clips, err := database.ClipsByQuery(params)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind query: %v", err))
-	}
-	err = bindingValidator.Struct(query)
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("validation error: %v", err))
-	}
-
-	// custom ordering query
-	orderParams := request.Params.GetDefault("order", "")
-	if len(orderParams) != 0 {
-		order := strings.Split(orderParams, ",")
-		if len(order) != 2 {
-			return there.Error(there.StatusBadRequest, "Invalid order params. Example: 'date,desc'")
-		}
-		if !stringInSlice(order[0], []string{"date", "duration", "size"}) {
-			return there.Error(there.StatusBadRequest, "Invalid first order param. 'date', 'duration' or 'size'")
-		}
-		if !stringInSlice(order[1], []string{"asc", "desc"}) {
-			return there.Error(there.StatusBadRequest, "Invalid second order param. 'asc' or 'desc'")
-		}
-		orderParams = strings.Replace(orderParams, ",", " ", -1)
-	}
-
-	if err := database.GetAllClips(&clips, query, orderParams); err != nil {
-		return there.Error(there.StatusNotFound, "No clips found")
+		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to filter clips: %v", err))
 	}
 
 	return there.Json(there.StatusOK, clips)
@@ -83,12 +53,22 @@ func GetClips(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [get]
 // @Param uuid path string true "Unique Identifier"
 func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
-	var clip database.Clip
+	uuid := request.RouteParams.GetDefault("uuid", "")  
 
-	uuid := request.Params.GetDefault("uuid", "")
+	id, err := strconv.Atoi(uuid)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err)
+	}
 
-	if err := database.GetOneClip(&clip, uuid); err != nil {
-		return there.Error(there.StatusNotFound, "Clip not found")
+	clip, err := database.ClipById(id)
+	if err != nil {
+		status := there.StatusInternalServerError
+		if ent.IsNotFound(err) {
+			status = there.StatusNotFound
+
+		}
+
+		return there.Error(status, err)
 	}
 
 	return there.Json(there.StatusOK, clip)
@@ -105,23 +85,34 @@ func GetClipByUUID(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/ [post]
 // @Param Body body database.Clip true "Clip obj"
 func CreateClip(request there.HttpRequest) there.HttpResponse {
-	var newClip database.Clip
-	var clip database.Clip
+	var clip ressources.Clip
 
-	err := request.Body.BindJson(&newClip)
+	err := request.Body.BindJson(&clip)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
+		return there.Error(there.StatusBadRequest, err )
 	}
 
-	if err := database.GetOneClip(&clip, newClip.UUID); err == nil {
-		return there.Error(there.StatusBadRequest, "Clip already exists")
+	err = postValidator.Struct(clip)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
 	}
 
-	if err := database.AddNewClip(&newClip); err != nil {
-		return there.Error(there.StatusUnprocessableEntity, "Error while creating the model")
+	newClip, err := database.CreateClip(clip)
+	if err != nil {
+		status := there.StatusInternalServerError
+
+		if ent.IsConstraintError(err) {
+			status = there.StatusConflict
+		}
+
+		if ent.IsValidationError(err) {
+			status = there.StatusBadRequest
+		}
+
+		return there.Error(status, err )
 	}
 
-	return there.Message(there.StatusCreated, "Created")
+	return there.Json(there.StatusCreated, newClip)
 }
 
 // PatchClip godoc
@@ -136,19 +127,42 @@ func CreateClip(request there.HttpRequest) there.HttpResponse {
 // @Param uuid path string true "Unique Identifier"
 // @Param Body body database.Clip true "Clip obj"
 func PatchClip(request there.HttpRequest) there.HttpResponse {
-	var newClip database.Clip
-	uuid := request.Params.GetDefault("uuid", "")
+	var clip ressources.Clip
+	uuid := request.RouteParams.GetDefault("uuid", "")  
 
-	err := request.Body.BindJson(&newClip)
+	id, convErr := strconv.Atoi(uuid)
+	if convErr != nil {
+		return there.Error(there.StatusBadRequest, convErr)
+	}
+
+	clip.ID = id
+
+	err := request.Body.BindJson(&clip)
 	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind query: %v", err))
+		return there.Error(there.StatusBadRequest, err )
 	}
 
-	if err := database.PatchClip(&newClip, uuid); err != nil {
-		return there.Error(there.StatusUnprocessableEntity, "Error while patching the model")
+
+	err = patchValidator.Struct(clip)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
 	}
 
-	return there.Message(there.StatusOK, "Updated")
+	newClip, err := database.PatchClip(id).
+		SetDate(clip.Date).
+		SetDuration(clip.Duration).
+		SetFilename(clip.Filename).
+		SetResolution(clip.Resolution).
+		SetSize(clip.Size).
+		SetTitle(clip.Title).
+		SetViewCount(clip.ViewCount).
+		Save(context.Background())
+
+	if err != nil {
+		return there.Error(there.StatusBadRequest, "Unable to create Clip" )
+	}
+
+	return there.Json(there.StatusCreated, newClip)
 }
 
 // DeleteClip godoc
@@ -162,16 +176,17 @@ func PatchClip(request there.HttpRequest) there.HttpResponse {
 // @Router /clips/{uuid} [delete]
 // @Param uuid path string true "Unique Identifier"
 func DeleteClip(request there.HttpRequest) there.HttpResponse {
-	var clip database.Clip
-	uuid := request.Params.GetDefault("uuid", "")
+	uuid := request.RouteParams.GetDefault("uuid", "")
 
-	if err := database.GetOneClip(&clip, uuid); err != nil {
-		return there.Error(there.StatusNotFound, "Clip not found")
+	id, convErr := strconv.Atoi(uuid)
+	if convErr != nil {
+		return there.Error(there.StatusBadRequest, convErr)
 	}
 
-	if err := database.DeleteClip(&clip, uuid); err != nil {
-		return there.Error(there.StatusBadRequest, "Error while deleting the model")
+	err := database.DeleteClip(id)
+	if err != nil {
+		return there.Error(there.StatusBadRequest, err )
 	}
 
-	return there.Message(there.StatusOK, "Deleted")
+	return there.Message(there.StatusOK, "Clip Deleted succesfully")
 }

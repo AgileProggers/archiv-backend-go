@@ -2,10 +2,7 @@
 fill_db.py
 /archiv-backend-go*
 
-docker-compose.yaml
-postgres.sh
 ca
-postgres.Dockerfile
 .env
 
 .idea

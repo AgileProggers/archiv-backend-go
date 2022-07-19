@@ -1,10 +1,6 @@
 package router
 
 import (
-	"fmt"
-	"strconv"
-
-	"github.com/AgileProggers/archiv-backend-go/pkg/database"
 	"github.com/Gebes/there/v2"
 )
 
@@ -20,21 +16,21 @@ import (
 // @Param uuid query int false "The uuid of a creator"
 // @Param name query string false "The name of a creator"
 func GetCreators(request there.HttpRequest) there.HttpResponse {
-	var creators []database.Creator
-	var query database.Creator
+	var creators []int //database.Creator
+	// var query database.Creator
 
-	err := request.Body.BindJson(&query)
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind query: %v", err))
-	}
-	err = bindingValidator.Struct(query)
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("validation error: %v", err))
-	}
+	// err := request.Body.BindJson(&query)
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind query: %v", err))
+	// }
+	// err = bindingValidator.Struct(query)
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("validation error: %v", err))
+	// }
 
-	if err := database.GetAllCreators(&creators, query); err != nil {
-		return there.Error(there.StatusNotFound, "No creators found")
-	}
+	// if err := database.Creators(&creators, query); err != nil {
+	// 	return there.Error(there.StatusNotFound, "No creators found")
+	// }
 
 	return there.Json(there.StatusOK, creators)
 }
@@ -49,16 +45,16 @@ func GetCreators(request there.HttpRequest) there.HttpResponse {
 // @Router /creators/{uuid} [get]
 // @Param uuid path int true "Unique Identifyer"
 func GetCreatorByUUID(request there.HttpRequest) there.HttpResponse {
-	var creator database.Creator
+	var creator int//database.Creator
 
-	uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("uuid is invalid: %v", err))
-	}
+	// uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("uuid is invalid: %v", err))
+	// }
 
-	if err := database.GetOneCreator(&creator, uuid); err != nil {
-		return there.Error(there.StatusNotFound, "Creator not found")
-	}
+	// if err := database.GetOneCreator(&creator, uuid); err != nil {
+	// 	return there.Error(there.StatusNotFound, "Creator not found")
+	// }
 
 	return there.Json(there.StatusOK, creator)
 }
@@ -74,21 +70,21 @@ func GetCreatorByUUID(request there.HttpRequest) there.HttpResponse {
 // @Router /creators/ [post]
 // @Param Body body database.Creator true "Creator obj"
 func CreateCreator(request there.HttpRequest) there.HttpResponse {
-	var newCreator database.Creator
-	var creator database.Creator
+	// var newCreator database.Creator
+	// var creator database.Creator
 
-	err := request.Body.BindJson(&newCreator)
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
-	}
+	// err := request.Body.BindJson(&newCreator)
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
+	// }
 
-	if err := database.GetOneCreator(&creator, newCreator.UUID); err == nil {
-		return there.Error(there.StatusBadRequest, "Creator already exists")
-	}
+	// if err := database.GetOneCreator(&creator, newCreator.UUID); err == nil {
+	// 	return there.Error(there.StatusBadRequest, "Creator already exists")
+	// }
 
-	if err := database.AddNewCreator(&newCreator); err != nil {
-		return there.Error(there.StatusUnprocessableEntity, "Error while creating the model")
-	}
+	// if err := database.AddNewCreator(&newCreator); err != nil {
+	// 	return there.Error(there.StatusUnprocessableEntity, "Error while creating the model")
+	// }
 
 	return there.Message(there.StatusCreated, "Created")
 }
@@ -105,21 +101,21 @@ func CreateCreator(request there.HttpRequest) there.HttpResponse {
 // @Param uuid path int true "Unique Identifier"
 // @Param Body body database.Creator true "Creator obj"
 func PatchCreator(request there.HttpRequest) there.HttpResponse {
-	var newCreator database.Creator
+	// var newCreator database.Creator
 
-	uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("uuid is invalid: %v", err))
-	}
+	// uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("uuid is invalid: %v", err))
+	// }
 
-	err = request.Body.BindJson(&newCreator)
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
-	}
+	// err = request.Body.BindJson(&newCreator)
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("unable to bind body: %v", err))
+	// }
 
-	if err := database.PatchCreator(&newCreator, uuid); err != nil {
-		return there.Error(there.StatusUnprocessableEntity, "Error while patching the model")
-	}
+	// if err := database.PatchCreator(&newCreator, uuid); err != nil {
+	// 	return there.Error(there.StatusUnprocessableEntity, "Error while patching the model")
+	// }
 
 	return there.Message(there.StatusOK, "Updated")
 }
@@ -135,20 +131,20 @@ func PatchCreator(request there.HttpRequest) there.HttpResponse {
 // @Router /creators/{uuid} [delete]
 // @Param uuid path string true "Unique Identifier"
 func DeleteCreator(request there.HttpRequest) there.HttpResponse {
-	var creator database.Creator
+	// var creator database.Creator
 
-	uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
-	if err != nil {
-		return there.Error(there.StatusBadRequest, fmt.Errorf("uuid is invalid: %v", err))
-	}
+	// uuid, err := strconv.Atoi(request.Params.GetDefault("uuid", ""))
+	// if err != nil {
+	// 	return there.Error(there.StatusBadRequest, fmt.Errorf("uuid is invalid: %v", err))
+	// }
 
-	if err := database.GetOneCreator(&creator, uuid); err != nil {
-		return there.Error(there.StatusNotFound, "Creator not found")
-	}
+	// if err := database.GetOneCreator(&creator, uuid); err != nil {
+	// 	return there.Error(there.StatusNotFound, "Creator not found")
+	// }
 
-	if err := database.DeleteCreator(&creator, uuid); err != nil {
-		return there.Error(there.StatusBadRequest, "Error while deleting the model")
-	}
+	// if err := database.DeleteCreator(&creator, uuid); err != nil {
+	// 	return there.Error(there.StatusBadRequest, "Error while deleting the model")
+	// }
 
 	return there.Message(there.StatusOK, "Deleted")
 }

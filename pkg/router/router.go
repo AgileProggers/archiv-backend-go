@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"fmt"
+
 	"github.com/Gebes/there/v2"
 	"github.com/go-playground/validator/v10"
 )
@@ -10,10 +11,15 @@ import (
 var (
 	app              *there.Router
 	bindingValidator = validator.New()
+	patchValidator = validator.New()
+	postValidator = validator.New()
 )
 
 func Listen() error {
 	bindingValidator.SetTagName("binding")
+	patchValidator.SetTagName("patch")
+	postValidator.SetTagName("post")
+
 	// Create fiber
 	app = there.NewRouter()
 

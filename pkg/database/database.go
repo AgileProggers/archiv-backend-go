@@ -1,53 +1,60 @@
 package database
 
 import (
-	"fmt"
+	"context"
+	"entgo.io/ent/dialect/sql"
+	"github.com/AgileProggers/archiv-backend-go/pkg/ent"
 	"github.com/AgileProggers/archiv-backend-go/pkg/env"
 	"github.com/AgileProggers/archiv-backend-go/pkg/logger"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	gormLogger "gorm.io/gorm/logger"
+	_ "github.com/lib/pq"
+
 	"time"
 )
 
-var database *gorm.DB
+var (
+	client *ent.Client
+	driver *sql.Driver
+)
 
 func init() {
-	// Connect DB
+	logger.Info.Println("Initializing Postgres database connection")
+	var err error
+	driver, err = sql.Open("postgres", env.PostgresDatabase)
+	if err != nil {
+		logger.Error.Fatalln("Failed opening connection to Postgres:", err)
+	}
+	// Get the underlying sql.DB object of the driver.
+	db := driver.DB()
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(100)
+	db.SetConnMaxLifetime(time.Hour)
 
-	db, err := gorm.Open(postgres.Open(env.PostgresDatabase), &gorm.Config{
-		Logger: gormLogger.New(logger.Info, gormLogger.Config{}),
-	})
+	client = ent.NewClient(ent.Driver(driver)) //.Debug()
+	err = autoMigrate()
 	if err != nil {
-		logger.Error.Fatalln("Unable to connect to database:", err)
+		logger.Error.Fatalln("Failed to auto migrate database:", err)
 	}
-	err = db.AutoMigrate(&Vod{}, &Game{}, &Creator{}, &Clip{})
+	logger.Info.Println("Migrated Postgres database")
+}
+
+func autoMigrate() error {
+	return client.Schema.Create(context.Background())
+}
+
+func rollback(errToReturn error, tx *ent.Tx) error {
+	err := tx.Rollback()
 	if err != nil {
-		logger.Error.Fatalln("Unable to auto migrate database:", err)
+		return err
 	}
-	database = db
+	return errToReturn
 }
 
 func Ping() (time.Duration, error) {
 	start := time.Now()
-	db, err := database.DB()
-	if err != nil {
-		return 0, fmt.Errorf("gorm.DB get database: %v", err)
-	}
-	err = db.Ping()
-	if err != nil {
-		return 0, fmt.Errorf("databse ping: %v", err)
-	}
-	return time.Now().Sub(start), nil
+	err := driver.DB().Ping()
+	return time.Now().Sub(start), err
 }
 
 func Close() error {
-	db, err := database.DB()
-	if err != nil {
-		return fmt.Errorf("gorm.DB get database: %v", err)
-	}
-	return db.Close()
-}
-func Raw(sql string, values ...interface{}) (tx *gorm.DB) {
-	return database.Raw(sql, values...)
+	return client.Close()
 }
