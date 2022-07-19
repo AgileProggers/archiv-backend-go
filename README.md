@@ -13,3 +13,7 @@ Proudly written in Go 🚀🍸 ![](https://cdn.betterttv.net/emote/5ed2588f10aaa
 ```
 POSTGRES_DATABASE=postgresql://user:agilePassword@host:port/database
 ```
+
+### Code formatting
+
+Enable git pre-commit hook with `git config core.hooksPath .githooks` to auto format all go files on commit.
